@@ -1,26 +1,168 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* HopeRoot Design System Colors */
+  --background: #f4f3ea; /* Creamy off-white paper tone */
+  --foreground: #121e14; /* Deep charcoal forest green */
+  
+  --primary: #15291b; /* Rich dark forest green */
+  --primary-foreground: #d6f837; /* Neon lime text on dark green */
+  
+  --accent-lime: #d6f837; /* Bright neon lime yellow */
+  --accent-lime-hover: #c4e825;
+  --accent-lime-foreground: #0d170e; /* Dark text on neon lime */
+  
+  --card: #ffffff;
+  --card-foreground: #121e14;
+  --card-subtle: #f9f8f3;
+  
+  --border: #e2e0d4;
+  --input: #e2e0d4;
+  --ring: #d6f837;
+
+  --hero-bg: #132417;
+  --hero-card: #1b3321;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-[#15291b]: var(--primary);
+  --color-[#d6f837]: var(--accent-lime);
+  --color-[#f4f3ea]: var(--background);
+
+  /* Font configuration */
+  --font-sans: var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Enable smooth scrolling across page */
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* HopeRoot Component Styles */
+
+/* Pill Badges with Bullet Dot */
+.badge-pill-light {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 12px;
+  background-color: rgba(18, 30, 20, 0.06);
+  border: 1px solid rgba(18, 30, 20, 0.12);
+  color: #1a2e1e;
+  font-size: 0.725rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.badge-pill-dark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #d6f837;
+  font-size: 0.725rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.badge-bullet {
+  width: 6px;
+  height: 6px;
+  border-radius: 12px;
+  background-color: #d6f837;
+  display: inline-block;
+}
+
+.badge-bullet-dark {
+  width: 6px;
+  height: 6px;
+  border-radius: 12px;
+  background-color: #1b3321;
+  display: inline-block;
+}
+
+/* HopeRoot Leaf-Diagonal Button Shapes (Top-Left: 22px, Top-Right: 5px, Bottom-Right: 22px, Bottom-Left: 5px) */
+.btn-neon {
+  background-color: var(--accent-lime);
+  color: var(--accent-lime-foreground);
+  font-weight: 700;
+  border-radius: 22px 5px 22px 5px;
+  padding: 0.7rem 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(214, 248, 55, 0.25);
+  cursor: pointer;
+}
+
+.btn-neon:hover {
+  background-color: var(--accent-lime-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(214, 248, 55, 0.4);
+}
+
+.btn-forest {
+  background-color: var(--primary);
+  color: var(--accent-lime);
+  font-weight: 700;
+  border-radius: 12px;
+  padding: 0.7rem 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.btn-forest:hover {
+  background-color: #1c3624;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(21, 41, 27, 0.2);
+}
+
+/* Floating Glassmorphism Navbar Styling */
+.floating-navbar {
+  background-color: rgba(19, 36, 23, 0.78);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f4f3ea;
+}
+::-webkit-scrollbar-thumb {
+  background: #c5c3b5;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a5a395;
 }
