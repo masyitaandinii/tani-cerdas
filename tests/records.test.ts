@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from '../app/api/records/route';
 import { TengkulakRecord } from '../app/lib/models/TengkulakRecord';
@@ -104,7 +105,7 @@ describe('Records API', () => {
 
         it('should allow admin and automatically override dusun', async () => {
             (getServerSession as any).mockResolvedValue({ user: { id: 'admin1', role: 'admin', assignedDusun: 1 } });
-            (TengkulakRecord.create as any).mockResolvedValue({ _id: 'new123' });
+            (TengkulakRecord.create as any).mockResolvedValue({ toObject: () => ({ _id: 'new123' }) });
 
             // Admin trying to post to dusun 2
             const req = mockRequest({
@@ -127,7 +128,7 @@ describe('Records API', () => {
         
         it('should allow superadmin to post to any dusun without overriding', async () => {
             (getServerSession as any).mockResolvedValue({ user: { id: 'super1', role: 'superadmin' } });
-            (TengkulakRecord.create as any).mockResolvedValue({ _id: 'new123' });
+            (TengkulakRecord.create as any).mockResolvedValue({ toObject: () => ({ _id: 'new123' }) });
 
             const req = mockRequest({
                 nama: 'Budi',

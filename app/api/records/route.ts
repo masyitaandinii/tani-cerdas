@@ -23,6 +23,7 @@ export async function GET() {
 
         const formattedRecords = records.map(r => {
             // Strip authorId to avoid exposing internal DB user IDs, but expose the real 'nama' to everyone
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
             const { authorId, _id, ...rest } = r as any;
             return { ...rest, id: _id.toString() };
         });
@@ -74,6 +75,7 @@ export async function POST(request: Request) {
         });
 
         const recordObj = newRecord.toObject();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { _id, ...restObj } = recordObj as any;
 
         return NextResponse.json({ ...restObj, id: _id.toString() }, { status: 201 });

@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { TengkulakRecord, Kuartal } from "../lib/data";
-import { PlusCircle, Edit2, Trash2, LogOut, User as UserIcon, ArrowLeft } from "lucide-react";
+import { PlusCircle, LogOut, User as UserIcon } from "lucide-react";
 import { useSession, signOut, signIn } from "next-auth/react";
-import Link from "next/link";
+import Image from "next/image";
 
 export default function PengelolaPage() {
     const { data: session, status } = useSession();
@@ -46,6 +46,7 @@ export default function PengelolaPage() {
 
     useEffect(() => {
         if (session?.user) {
+            // eslint-disable-next-line
             fetchRecords();
         }
     }, [session?.user]);
@@ -118,7 +119,7 @@ export default function PengelolaPage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[75vh] px-4 animate-in fade-in duration-500">
                 <div className="text-center mb-8">
-                    <img src="/Logo (3).svg" alt="TaniCerdas Logo" className="h-14 w-auto mx-auto mb-4 object-contain" />
+                    <Image src="/Logo (3).svg" alt="TaniCerdas Logo" width={56} height={56} className="h-14 w-auto mx-auto mb-4 object-contain" />
                     <h2 className="text-3xl font-extrabold text-[#121e14]">Portal Pengelola TaniCerdas</h2>
                     <p className="text-[#121e14]/60 mt-2 max-w-sm mx-auto text-sm font-medium">Masuk untuk mengelola data panen atau memantau setoran Anda.</p>
                 </div>

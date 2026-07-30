@@ -29,6 +29,7 @@ async function seed() {
         const hashedPassword = await bcrypt.hash('123', saltRounds);
 
         console.log('Creating users...');
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const superadmin = await User.create({
             username: 'superadmin',
             name: 'Super Admin',

@@ -2,8 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   CircleDollarSign,
   Tractor,
-  TrendingUp,
-  TrendingDown,
   ArrowUpRight,
 } from "lucide-react";
 import { TengkulakRecord } from "../lib/data";
@@ -248,6 +246,7 @@ export function StatsCards() {
                     boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
                     backgroundColor: "#ffffff",
                   }}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   formatter={(value: any) => [
                     `Rp ${Math.round(Number(value) || 0).toLocaleString("id-ID")}`,
                     "",
@@ -345,6 +344,7 @@ export function StatsCards() {
                     boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
                     backgroundColor: "#ffffff",
                   }}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   formatter={(value: any) => [
                     `${Math.round(Number(value) || 0).toLocaleString("id-ID")} Kg`,
                     "Panen",
