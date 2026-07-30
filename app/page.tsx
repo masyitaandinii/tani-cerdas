@@ -7,16 +7,27 @@ import { StatsCards } from "./components/StatsCards";
 import { DashboardCharts } from "./components/DashboardCharts";
 import { DusunDistributionCard } from "./components/DusunDistributionCard";
 import { ChatbotSection } from "./components/ChatbotSection";
-import { Filter, Users, Bot, ArrowUpRight, Menu, X, Lightbulb } from "lucide-react";
+import {
+  Filter,
+  Users,
+  Bot,
+  ArrowUpRight,
+  Menu,
+  X,
+  Lightbulb,
+} from "lucide-react";
 
 export default function Home() {
-  const { records, setChatbotOpen } = useAppStore();
+  const { setChatbotOpen } = useAppStore();
   const [filterLevel, setFilterLevel] = useState<"Desa" | "Dusun">("Desa");
   const [selectedDusun, setSelectedDusun] = useState<number>(1);
   const [selectedKuartal, setSelectedKuartal] = useState<string>("ALL");
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+  const handleNavClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    targetId: string,
+  ) => {
     e.preventDefault();
     const elem = document.getElementById(targetId);
     if (elem) {
@@ -27,13 +38,16 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#f4f3ea] text-[#121e14] relative pb-20 selection:bg-[#d6f837] selection:text-[#121e14]">
-
       {/* FLOATING STICKY GLASSMORPHISM NAVBAR (Matching max-w-6xl container width across entire page) */}
       <header className="sticky top-4 z-50 px-4 sm:px-6 pointer-events-none">
         <div className="max-w-7xl mx-auto floating-navbar px-5 h-16 sm:h-18 flex items-center justify-between pointer-events-auto">
           {/* Original TaniCerdas Logo */}
           <div className="flex items-center gap-3">
-            <img src="/Logo (3).svg" alt="TaniCerdas Logo" className="h-8 w-auto object-contain" />
+            <img
+              src="/Logo (3).svg"
+              alt="TaniCerdas Logo"
+              className="h-8 w-auto object-contain"
+            />
             <span className="text-xl sm:text-2xl font-bold tracking-tight text-white font-sans">
               TaniCerdas
             </span>
@@ -41,11 +55,34 @@ export default function Home() {
 
           {/* Desktop Navigation Links with Smooth Scrolling */}
           <nav className="hidden md:flex items-center gap-7 text-xs font-bold tracking-wider text-white/80 uppercase">
-            <a href="#hero" onClick={(e) => handleNavClick(e, "hero")} className="hover:text-[#d6f837] transition-colors">Beranda</a>
-            <a href="#overview" onClick={(e) => handleNavClick(e, "overview")} className="hover:text-[#d6f837] transition-colors">Ringkasan</a>
-            <a href="#stats" onClick={(e) => handleNavClick(e, "stats")} className="hover:text-[#d6f837] transition-colors">Data Panen</a>
-            <a href="#grafik" onClick={(e) => handleNavClick(e, "grafik")} className="hover:text-[#d6f837] transition-colors">Grafik & Tren</a>
-            
+            <a
+              href="#hero"
+              onClick={(e) => handleNavClick(e, "hero")}
+              className="hover:text-[#d6f837] transition-colors"
+            >
+              Beranda
+            </a>
+            <a
+              href="#overview"
+              onClick={(e) => handleNavClick(e, "overview")}
+              className="hover:text-[#d6f837] transition-colors"
+            >
+              Ringkasan
+            </a>
+            <a
+              href="#stats"
+              onClick={(e) => handleNavClick(e, "stats")}
+              className="hover:text-[#d6f837] transition-colors"
+            >
+              Grafik & Tren
+            </a>
+            <a
+              href="#grafik"
+              onClick={(e) => handleNavClick(e, "grafik")}
+              className="hover:text-[#d6f837] transition-colors"
+            >
+              Data Panen
+            </a>
           </nav>
 
           {/* Header CTA / Login Link (Leaf Diagonal Shape) */}
@@ -65,7 +102,11 @@ export default function Home() {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
           </button>
         </div>
 
@@ -73,10 +114,25 @@ export default function Home() {
         {mobileMenuOpen && (
           <div className="md:hidden max-w-7xl mx-auto mt-2 bg-[#132417]/95 backdrop-blur-xl border border-white/15 rounded-2xl p-6 space-y-4 shadow-2xl animate-in slide-in-from-top-2 pointer-events-auto">
             <nav className="flex flex-col gap-4 text-sm font-bold tracking-wider text-white/90 uppercase">
-              <a href="#hero" onClick={(e) => handleNavClick(e, "hero")} className="text-[#d6f837]">Beranda</a>
-              <a href="#overview" onClick={(e) => handleNavClick(e, "overview")}>Ringkasan</a>
-              <a href="#stats" onClick={(e) => handleNavClick(e, "stats")}>Data Panen</a>
-              <a href="#grafik" onClick={(e) => handleNavClick(e, "grafik")}>Grafik & Tren</a>
+              <a
+                href="#hero"
+                onClick={(e) => handleNavClick(e, "hero")}
+                className="text-[#d6f837]"
+              >
+                Beranda
+              </a>
+              <a
+                href="#overview"
+                onClick={(e) => handleNavClick(e, "overview")}
+              >
+                Ringkasan
+              </a>
+              <a href="#stats" onClick={(e) => handleNavClick(e, "stats")}>
+                Grafik & Tren
+              </a>
+              <a href="#grafik" onClick={(e) => handleNavClick(e, "grafik")}>
+                Data Panen
+              </a>
             </nav>
             <div className="pt-2">
               <Link
@@ -93,7 +149,10 @@ export default function Home() {
       </header>
 
       {/* HERO SECTION WITH TERRACED RICE FIELD BACKGROUND */}
-      <section id="hero" className="relative bg-[#132417] text-white min-h-[620px] lg:min-h-[680px] flex flex-col justify-between -mt-24 pt-28">
+      <section
+        id="hero"
+        className="relative bg-[#132417] text-white min-h-[620px] lg:min-h-[680px] flex flex-col justify-between -mt-24 pt-28"
+      >
         {/* Background Image with Dark Forest Overlay */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           <img
@@ -108,7 +167,6 @@ export default function Home() {
         {/* Hero Content Grid (Badge & H1 at Bottom Left, Desc Text at Right Center, Button at Bottom Right) */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-between w-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 items-stretch py-12 lg:py-16">
-            
             {/* Left Column - Badge and H1 Title at Bottom Left */}
             <div className="lg:col-span-8 flex flex-col justify-end space-y-6">
               <div>
@@ -119,8 +177,7 @@ export default function Home() {
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.08] font-sans">
-                Wujudkan Pertanian Desa 
-                yang Cerdas & Berkelanjutan
+                Wujudkan Pertanian Desa yang Cerdas & Berkelanjutan
               </h1>
             </div>
 
@@ -129,20 +186,20 @@ export default function Home() {
               {/* Right Center Paragraph */}
               <div className="my-auto py-4">
                 <p className="text-white/85 text-sm sm:text-base leading-relaxed font-medium">
-                 Tani Cerdas membantu petani dan kelompok tani mengelola data pertanian secara digital untuk meningkatkan produktivitas dan kesejahteraan.
+                  Tani Cerdas membantu petani dan kelompok tani mengelola data
+                  pertanian secara digital untuk meningkatkan produktivitas dan
+                  kesejahteraan.
                 </p>
               </div>
-
-  
             </div>
-
           </div>
         </div>
       </section>
 
-      <main id="overview" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 space-y-12 animate-in fade-in duration-700">
-
-
+      <main
+        id="overview"
+        className="max-w-7xl mx-auto px-4 sm:px-6 py-12 space-y-12 animate-in fade-in duration-700"
+      >
         <div className="space-y-4 pt-4 border-t border-[#e2e0d4] max-w-7xl">
           <span className="badge-pill-light">
             <span className="badge-bullet-dark"></span>
@@ -152,12 +209,15 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-8">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#121e14] tracking-tight leading-[1.15]">
-                Kami Hadir Untuk Mendukung Pertanian Desa. Perubahan Dimulai Dari Data Terpercaya.
+                Kami Hadir Untuk Mendukung Pertanian Desa. Perubahan Dimulai
+                Dari Data Terpercaya.
               </h2>
             </div>
             <div className="lg:col-span-4 space-y-4">
               <p className="text-[#121e14]/70 text-lg leading-relaxed">
-                Selamat datang di platform TaniCerdas. Pemantauan harga beras, gabah, dan distribusi hasil panen di tingkat Desa hingga Dusun secara real-time.
+                Selamat datang di platform TaniCerdas. Pemantauan harga beras,
+                gabah, dan distribusi hasil panen di tingkat Desa hingga Dusun
+                secara real-time.
               </p>
             </div>
           </div>
@@ -165,35 +225,14 @@ export default function Home() {
 
         {/* Global Stats Overview */}
         <div id="stats">
-          <StatsCards records={records} />
-        </div>
-
-        {/* Chatbot CTA Banner */}
-        <div id="bot" className="bg-[#15291b] p-8 sm:p-10 rounded-[2rem] text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative border border-white/10">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-[#d6f837]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
-          <div className="relative z-10 flex-1 space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-[#d6f837] rounded-xl text-[#121e14]">
-                <Lightbulb className="w-6 h-6 stroke-[2.5]" />
-              </div>
-              <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">Butuh Bantuan atau Informasi Terkini?</h3>
-            </div>
-            <p className="text-white/80 max-w-2xl text-base leading-relaxed">
-              Tanya TaniBot AI tentang harga standar beras, perkiraan waktu panen, rekomendasi pupuk, hingga panduan pengelolaan hasil panen secara detail.
-            </p>
-          </div>
-          <button
-            onClick={() => setChatbotOpen(true)}
-            className="btn-neon text-sm sm:text-base font-bold py-4 px-8 shrink-0 relative z-10 text-[#0f1a10]"
-          >
-            <Bot className="w-5 h-5 stroke-[2.5]" />
-            <span>Tanya TaniBot AI</span>
-            <ArrowUpRight className="w-5 h-5 stroke-[2.5]" />
-          </button>
+          <StatsCards />
         </div>
 
         {/* Filter Controls (Smooth Sliding Switch Button) */}
-        <div id="grafik" className="bg-white p-5 rounded-2xl border border-[#e2e0d4] shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between sticky top-28 z-30 backdrop-blur-md">
+        <div
+          id="grafik"
+          className="bg-white p-5 rounded-2xl border border-[#e2e0d4] shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between sticky top-28 z-30 backdrop-blur-md"
+        >
           <div className="flex items-center gap-2 text-sm font-bold text-[#121e14]/80">
             <div className="p-1.5 bg-[#15291b] text-[#d6f837] rounded-lg">
               <Filter className="w-4 h-4" />
@@ -216,7 +255,9 @@ export default function Home() {
               <button
                 onClick={() => setFilterLevel("Desa")}
                 className={`relative z-10 px-4 py-2 text-xs font-bold transition-colors duration-300 ${
-                  filterLevel === "Desa" ? "text-[#d6f837]" : "text-[#121e14]/70 hover:text-[#121e14]"
+                  filterLevel === "Desa"
+                    ? "text-[#d6f837]"
+                    : "text-[#121e14]/70 hover:text-[#121e14]"
                 }`}
               >
                 Tingkat Desa
@@ -224,7 +265,9 @@ export default function Home() {
               <button
                 onClick={() => setFilterLevel("Dusun")}
                 className={`relative z-10 px-4 py-2 text-xs font-bold transition-colors duration-300 ${
-                  filterLevel === "Dusun" ? "text-[#d6f837]" : "text-[#121e14]/70 hover:text-[#121e14]"
+                  filterLevel === "Dusun"
+                    ? "text-[#d6f837]"
+                    : "text-[#121e14]/70 hover:text-[#121e14]"
                 }`}
               >
                 Tingkat Dusun
@@ -244,8 +287,10 @@ export default function Home() {
                 onChange={(e) => setSelectedDusun(Number(e.target.value))}
                 className="w-full px-4 py-2 bg-[#f4f3ea] border border-[#e2e0d4] rounded-xl text-xs font-bold text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
               >
-                {[1, 2, 3, 4].map(d => (
-                  <option key={d} value={d}>Dusun {d}</option>
+                {[1, 2, 3, 4].map((d) => (
+                  <option key={d} value={d}>
+                    Dusun {d}
+                  </option>
                 ))}
               </select>
             </div>
@@ -269,17 +314,45 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <DashboardCharts
-              records={records}
               filterLevel={filterLevel}
               selectedDusun={selectedDusun}
               selectedKuartal={selectedKuartal}
             />
           </div>
           <div className="lg:col-span-1">
-            <DusunDistributionCard records={records} />
+            <DusunDistributionCard selectedKuartal={selectedKuartal} />
           </div>
         </div>
-
+        {/* Chatbot CTA Banner */}
+        <div
+          id="bot"
+          className="bg-[#15291b] p-8 sm:p-10 rounded-[2rem] text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative border border-white/10"
+        >
+          <div className="absolute top-0 right-0 w-80 h-80 bg-[#d6f837]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
+          <div className="relative z-10 flex-1 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-[#d6f837] rounded-xl text-[#121e14]">
+                <Lightbulb className="w-6 h-6 stroke-[2.5]" />
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                Butuh Bantuan atau Informasi Terkini?
+              </h3>
+            </div>
+            <p className="text-white/80 max-w-2xl text-base leading-relaxed">
+              Tanya TaniBot AI tentang harga standar beras, perkiraan waktu
+              panen, rekomendasi pupuk, hingga panduan pengelolaan hasil panen
+              secara detail.
+            </p>
+          </div>
+          <button
+            onClick={() => setChatbotOpen(true)}
+            className="btn-neon text-sm sm:text-base font-bold py-4 px-8 shrink-0 relative z-10 text-[#0f1a10]"
+          >
+            <Bot className="w-5 h-5 stroke-[2.5]" />
+            <span>Tanya TaniBot AI</span>
+            <ArrowUpRight className="w-5 h-5 stroke-[2.5]" />
+          </button>
+        </div>
       </main>
 
       {/* Floating Chatbot */}
