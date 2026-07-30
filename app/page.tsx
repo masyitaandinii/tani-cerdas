@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAppStore } from "./lib/store";
 import { StatsCards } from "./components/StatsCards";
 import { DashboardCharts } from "./components/DashboardCharts";
@@ -43,9 +44,11 @@ export default function Home() {
         <div className="max-w-7xl mx-auto floating-navbar px-5 h-16 sm:h-18 flex items-center justify-between pointer-events-auto">
           {/* Original TaniCerdas Logo */}
           <div className="flex items-center gap-3">
-            <img
+            <Image
               src="/Logo (3).svg"
               alt="TaniCerdas Logo"
+              width={32}
+              height={32}
               className="h-8 w-auto object-contain"
             />
             <span className="text-xl sm:text-2xl font-bold tracking-tight text-white font-sans">
@@ -155,9 +158,11 @@ export default function Home() {
       >
         {/* Background Image with Dark Forest Overlay */}
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <img
+          <Image
             src="/hero.jpg"
             alt="Terraced Rice Fields"
+            width={1920}
+            height={1080}
             className="w-full h-full object-cover object-center scale-105 filter brightness-90 contrast-105"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#132417]/85 via-[#132417]/75 to-[#132417]/95" />
