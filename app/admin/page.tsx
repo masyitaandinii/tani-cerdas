@@ -162,7 +162,7 @@ export default function PengelolaPage() {
     }
 
     // TENGKULAK DASHBOARD
-    if (activeUser.role === "tengkulak") {
+    if (activeUser.role === "admin") {
         const myRecords = records.filter(r => r.nama.toLowerCase() === activeUser.name.toLowerCase());
         const totalPanenKu = myRecords.reduce((acc, r) => acc + (r.totalPanen || 0), 0);
 

@@ -5,20 +5,20 @@ declare module 'next-auth' {
     interface Session {
         user: {
             id?: string;
-            role?: 'superadmin' | 'admin' | 'user';
+            role?: 'superadmin' | 'admin' | 'user' | 'tengkulak';
             assignedDusun?: number;
         } & DefaultSession['user'];
     }
     
     interface User extends DefaultUser {
-        role?: 'superadmin' | 'admin' | 'user';
+        role?: 'superadmin' | 'admin' | 'user' | 'tengkulak';
         assignedDusun?: number;
     }
 }
 
 declare module 'next-auth/jwt' {
     interface JWT {
-        role?: 'superadmin' | 'admin' | 'user';
+        role?: 'superadmin' | 'admin' | 'user' | 'tengkulak';
         assignedDusun?: number;
     }
 }
