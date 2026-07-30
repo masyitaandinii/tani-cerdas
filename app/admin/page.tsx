@@ -10,11 +10,13 @@ export default function PengelolaPage() {
     const { data: session, status } = useSession();
 
     // Petakan session NextAuth ke format activeUser agar komponen di bawahnya tidak rusak
-    const activeUser = session?.user ? {
-        name: session.user.name || "Pengguna",
-        role: session.user.role,
-        assignedDusun: session.user.assignedDusun
-    } : null;
+    const activeUser = session?.user
+        ? {
+            name: session.user.name || "Pengguna",
+            role: session.user.role,
+            assignedDusun: session.user.assignedDusun,
+        }
+        : null;
 
     // Login Form State
     const [loginUsername, setLoginUsername] = useState("");
@@ -31,6 +33,16 @@ export default function PengelolaPage() {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [records, setRecords] = useState<TengkulakRecord[]>([]);
+
+    const [userFormData, setUserFormData] = useState({
+        username: "",
+        password: "",
+        name: "",
+        role: "admin",
+        assignedDusun: 1,
+    });
+    const [isSubmittingUser, setIsSubmittingUser] = useState(false);
+    const [activeTab, setActiveTab] = useState<'data' | 'user'>('data');
 
     const fetchRecords = async () => {
         try {
@@ -52,22 +64,28 @@ export default function PengelolaPage() {
     }, [session?.user]);
 
     const handleLogout = () => {
-        signOut({ callbackUrl: '/admin' });
+        signOut({ callbackUrl: "/admin" });
     };
 
     const handleAdminSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!activeUser || (activeUser.role !== "admin" && activeUser.role !== "superadmin")) return;
+        if (
+            !activeUser ||
+            (activeUser.role !== "admin" && activeUser.role !== "superadmin")
+        )
+            return;
 
         const b = Number(formData.hargaBeras);
         const g = Number(formData.hargaGabah);
         const p = Number(formData.totalPanen);
 
         if (b <= 0 || g <= 0 || p <= 0) {
-            alert("Harga beras, harga gabah, dan total panen harus berupa angka lebih dari 0.");
+            alert(
+                "Harga beras, harga gabah, dan total panen harus berupa angka lebih dari 0.",
+            );
             return;
         }
-        
+
         setIsSubmitting(true);
         try {
             const res = await fetch("/api/records", {
@@ -75,7 +93,10 @@ export default function PengelolaPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     nama: formData.nama,
-                    dusun: activeUser.role === "superadmin" ? Number(formData.dusun) : (activeUser.assignedDusun || 1),
+                    dusun:
+                        activeUser.role === "superadmin"
+                            ? Number(formData.dusun)
+                            : activeUser.assignedDusun || 1,
                     hargaBeras: Number(formData.hargaBeras),
                     hargaGabah: Number(formData.hargaGabah),
                     kuartal: formData.kuartal,
@@ -84,11 +105,18 @@ export default function PengelolaPage() {
             });
 
             if (res.ok) {
-                setFormData({ nama: "", dusun: 1, hargaBeras: "", hargaGabah: "", kuartal: "Q1", totalPanen: "" });
+                setFormData({
+                    nama: "",
+                    dusun: 1,
+                    hargaBeras: "",
+                    hargaGabah: "",
+                    kuartal: "Q1",
+                    totalPanen: "",
+                });
                 await fetchRecords();
             } else {
                 const err = await res.json();
-                alert(`Gagal menyimpan data: ${err.error || 'Unknown error'}`);
+                alert(`Gagal menyimpan data: ${err.error || "Unknown error"}`);
             }
         } catch (error) {
             console.error("Failed to submit record:", error);
@@ -98,8 +126,51 @@ export default function PengelolaPage() {
         }
     };
 
+    const handleUserSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!activeUser || activeUser.role !== "superadmin") return;
+
+        setIsSubmittingUser(true);
+        try {
+            const res = await fetch("/api/users", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: userFormData.username,
+                    password: userFormData.password,
+                    name: userFormData.name,
+                    role: userFormData.role,
+                    assignedDusun: Number(userFormData.assignedDusun),
+                }),
+            });
+
+            if (res.ok) {
+                setUserFormData({
+                    username: "",
+                    password: "",
+                    name: "",
+                    role: "admin",
+                    assignedDusun: 1,
+                });
+                alert("Pengguna berhasil ditambahkan!");
+            } else {
+                const err = await res.json();
+                alert(`Gagal menambah pengguna: ${err.error || "Unknown error"}`);
+            }
+        } catch (error) {
+            console.error("Failed to add user:", error);
+            alert("Terjadi kesalahan koneksi saat menyimpan pengguna.");
+        } finally {
+            setIsSubmittingUser(false);
+        }
+    };
+
     if (status === "loading") {
-        return <div className="flex justify-center items-center min-h-[75vh] animate-pulse">Memuat Sesi Aman...</div>;
+        return (
+            <div className="flex justify-center items-center min-h-[75vh] animate-pulse">
+                Memuat Sesi Aman...
+            </div>
+        );
     }
 
     if (!activeUser) {
@@ -109,7 +180,7 @@ export default function PengelolaPage() {
             const result = await signIn("credentials", {
                 username: loginUsername,
                 password: loginPassword,
-                redirect: false
+                redirect: false,
             });
             if (result?.error) {
                 setLoginError(result.error);
@@ -119,11 +190,21 @@ export default function PengelolaPage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[75vh] px-4 animate-in fade-in duration-500">
                 <div className="text-center mb-8">
-                    <Image src="/Logo (3).svg" alt="TaniCerdas Logo" width={56} height={56} className="h-14 w-auto mx-auto mb-4 object-contain" />
-                    <h2 className="text-3xl font-extrabold text-[#121e14]">Portal Pengelola TaniCerdas</h2>
-                    <p className="text-[#121e14]/60 mt-2 max-w-sm mx-auto text-sm font-medium">Masuk untuk mengelola data panen atau memantau setoran Anda.</p>
+                    <Image
+                        src="/Logo (3).svg"
+                        alt="TaniCerdas Logo"
+                        width={56}
+                        height={56}
+                        className="h-14 w-auto mx-auto mb-4 object-contain"
+                    />
+                    <h2 className="text-3xl font-extrabold text-[#121e14]">
+                        Portal Pengelola TaniCerdas
+                    </h2>
+                    <p className="text-[#121e14]/60 mt-2 max-w-sm mx-auto text-sm font-medium">
+                        Masuk untuk mengelola data panen atau memantau setoran Anda.
+                    </p>
                 </div>
-                
+
                 <div className="bg-white p-8 rounded-[1.75rem] shadow-md border border-[#e2e0d4] w-full max-w-md">
                     <form onSubmit={handleLoginSubmit} className="space-y-6">
                         {loginError && (
@@ -132,7 +213,9 @@ export default function PengelolaPage() {
                             </div>
                         )}
                         <div>
-                            <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-2">Username</label>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-2">
+                                Username
+                            </label>
                             <input
                                 type="text"
                                 required
@@ -143,7 +226,9 @@ export default function PengelolaPage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-2">Password</label>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-2">
+                                Password
+                            </label>
                             <input
                                 type="password"
                                 required
@@ -153,7 +238,10 @@ export default function PengelolaPage() {
                                 placeholder="••••••••"
                             />
                         </div>
-                        <button type="submit" className="btn-forest w-full py-3.5 text-xs font-bold uppercase tracking-wider justify-center">
+                        <button
+                            type="submit"
+                            className="btn-forest w-full py-3.5 text-xs font-bold uppercase tracking-wider justify-center"
+                        >
                             <span>Masuk ke Portal</span>
                         </button>
                     </form>
@@ -163,9 +251,14 @@ export default function PengelolaPage() {
     }
 
     // TENGKULAK DASHBOARD
-    if (activeUser.role === "admin") {
-        const myRecords = records.filter(r => r.nama.toLowerCase() === activeUser.name.toLowerCase());
-        const totalPanenKu = myRecords.reduce((acc, r) => acc + (r.totalPanen || 0), 0);
+    if (activeUser.role === "tengkulak") {
+        const myRecords = records.filter(
+            (r) => r.nama.toLowerCase() === activeUser.name.toLowerCase(),
+        );
+        const totalPanenKu = myRecords.reduce(
+            (acc, r) => acc + (r.totalPanen || 0),
+            0,
+        );
 
         return (
             <div className="space-y-8 animate-in fade-in duration-500 max-w-5xl mx-auto">
@@ -175,8 +268,12 @@ export default function PengelolaPage() {
                             <UserIcon className="w-6 h-6 stroke-[2.2]" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-extrabold text-[#121e14]">Halo, {activeUser.name}</h1>
-                            <p className="text-[#121e14]/70 text-xs font-semibold mt-0.5">Dusun {activeUser.assignedDusun} • Tengkulak Partner</p>
+                            <h1 className="text-2xl font-extrabold text-[#121e14]">
+                                Halo, {activeUser.name}
+                            </h1>
+                            <p className="text-[#121e14]/70 text-xs font-semibold mt-0.5">
+                                Dusun {activeUser.assignedDusun} • Tengkulak Partner
+                            </p>
                         </div>
                     </div>
                     <button
@@ -193,23 +290,34 @@ export default function PengelolaPage() {
                             <span className="badge-bullet"></span> AKUMULASI PANEN
                         </span>
                         <h3 className="text-4xl font-extrabold text-[#d6f837] mt-2">
-                            {(totalPanenKu / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} <span className="text-lg text-white/80">Ton</span>
+                            {(totalPanenKu / 1000).toLocaleString("id-ID", {
+                                maximumFractionDigits: 1,
+                            })}{" "}
+                            <span className="text-lg text-white/80">Ton</span>
                         </h3>
                     </div>
                     <div className="bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm md:col-span-2 flex flex-col justify-center">
-                        <h3 className="font-bold text-lg text-[#121e14] mb-1">Riwayat Setoran Anda</h3>
+                        <h3 className="font-bold text-lg text-[#121e14] mb-1">
+                            Riwayat Setoran Anda
+                        </h3>
                         <p className="text-xs text-[#121e14]/70 leading-relaxed">
-                            Semua data riwayat panen dan harga yang Anda berikan dikelola oleh Admin Dusun. Jika terdapat kesalahan data, harap hubungi Admin Dusun {activeUser.assignedDusun}.
+                            Semua data riwayat panen dan harga yang Anda berikan dikelola oleh
+                            Admin Dusun. Jika terdapat kesalahan data, harap hubungi Admin
+                            Dusun {activeUser.assignedDusun}.
                         </p>
                     </div>
                 </div>
 
                 <div className="bg-white rounded-[1.75rem] border border-[#e2e0d4] shadow-sm overflow-hidden">
                     <div className="p-6 border-b border-[#e2e0d4] bg-[#f4f3ea]">
-                        <h3 className="font-bold text-base text-[#121e14]">Detail Riwayat Input Data</h3>
+                        <h3 className="font-bold text-base text-[#121e14]">
+                            Detail Riwayat Input Data
+                        </h3>
                     </div>
                     {myRecords.length === 0 ? (
-                        <div className="p-12 text-center text-[#121e14]/50 text-sm">Belum ada riwayat data yang tercatat atas nama Anda.</div>
+                        <div className="p-12 text-center text-[#121e14]/50 text-sm">
+                            Belum ada riwayat data yang tercatat atas nama Anda.
+                        </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left whitespace-nowrap">
@@ -224,14 +332,27 @@ export default function PengelolaPage() {
                                 </thead>
                                 <tbody className="divide-y divide-[#e2e0d4]">
                                     {myRecords.map((r) => (
-                                        <tr key={r.id} className="hover:bg-[#f4f3ea]/60 transition-colors text-xs font-semibold">
-                                            <td className="px-6 py-4 text-[#121e14]">{new Date(r.timestamp).toLocaleDateString('id-ID')}</td>
-                                            <td className="px-6 py-4">
-                                                <span className="bg-[#15291b] text-[#d6f837] px-2.5 py-1 rounded-md text-[10px] font-bold">{r.kuartal}</span>
+                                        <tr
+                                            key={r.id}
+                                            className="hover:bg-[#f4f3ea]/60 transition-colors text-xs font-semibold"
+                                        >
+                                            <td className="px-6 py-4 text-[#121e14]">
+                                                {new Date(r.timestamp).toLocaleDateString("id-ID")}
                                             </td>
-                                            <td className="px-6 py-4 text-[#121e14]">Rp {r.hargaBeras.toLocaleString('id-ID')}</td>
-                                            <td className="px-6 py-4 text-[#121e14]">Rp {r.hargaGabah.toLocaleString('id-ID')}</td>
-                                            <td className="px-6 py-4 font-bold text-[#15291b]">{(r.totalPanen || 0).toLocaleString('id-ID')} Kg</td>
+                                            <td className="px-6 py-4">
+                                                <span className="bg-[#15291b] text-[#d6f837] px-2.5 py-1 rounded-md text-[10px] font-bold">
+                                                    {r.kuartal}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-[#121e14]">
+                                                Rp {r.hargaBeras.toLocaleString("id-ID")}
+                                            </td>
+                                            <td className="px-6 py-4 text-[#121e14]">
+                                                Rp {r.hargaGabah.toLocaleString("id-ID")}
+                                            </td>
+                                            <td className="px-6 py-4 font-bold text-[#15291b]">
+                                                {(r.totalPanen || 0).toLocaleString("id-ID")} Kg
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -244,18 +365,23 @@ export default function PengelolaPage() {
     }
 
     // ADMIN DASHBOARD
-    // Note: For superadmin, they might see all records if they don't have assignedDusun, 
+    // Note: For superadmin, they might see all records if they don't have assignedDusun,
     // or we just show them everything if assignedDusun is not set.
-    const activeRecords = activeUser.role === "superadmin" 
-        ? records 
-        : records.filter((r) => r.dusun === activeUser.assignedDusun);
+    const activeRecords =
+        activeUser.role === "superadmin"
+            ? records
+            : records.filter((r) => r.dusun === activeUser.assignedDusun);
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
             <div className="flex justify-between items-center bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm">
                 <div>
-                    <h1 className="text-2xl font-extrabold text-[#121e14]">Halo, {activeUser.name}</h1>
-                    <p className="text-[#121e14]/70 text-xs font-semibold mt-0.5">Anda mengelola data untuk Dusun {activeUser.assignedDusun}.</p>
+                    <h1 className="text-2xl font-extrabold text-[#121e14]">
+                        Halo, {activeUser.name}
+                    </h1>
+                    <p className="text-[#121e14]/70 text-xs font-semibold mt-0.5">
+                        Anda mengelola data untuk Dusun {activeUser.assignedDusun}.
+                    </p>
                 </div>
                 <button
                     onClick={handleLogout}
@@ -268,23 +394,49 @@ export default function PengelolaPage() {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 <div className="xl:col-span-1">
                     <div className="bg-white rounded-[1.75rem] border border-[#e2e0d4] shadow-sm overflow-hidden sticky top-24">
-                        <div className="bg-[#15291b] p-5 border-b border-white/10 text-white">
+                        {activeUser.role === "superadmin" && (
+                            <div className="flex border-b border-[#e2e0d4]">
+                                <button
+                                    onClick={() => setActiveTab('data')}
+                                    className={`flex-1 py-4 text-xs font-bold uppercase tracking-wider text-center transition-colors ${activeTab === 'data' ? 'bg-[#15291b] text-[#d6f837]' : 'bg-[#f4f3ea] text-[#121e14]/60 hover:bg-[#e2e0d4]'}`}
+                                    type="button"
+                                >
+                                    Data Panen
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('user')}
+                                    className={`flex-1 py-4 text-xs font-bold uppercase tracking-wider text-center transition-colors ${activeTab === 'user' ? 'bg-[#15291b] text-[#d6f837]' : 'bg-[#f4f3ea] text-[#121e14]/60 hover:bg-[#e2e0d4]'}`}
+                                    type="button"
+                                >
+                                    Manajemen Akun
+                                </button>
+                            </div>
+                        )}
+
+                        {(activeTab === 'data' || activeUser.role !== "superadmin") && (
+                            <>
+                                <div className="bg-[#15291b] p-5 border-b border-white/10 text-white">
                             <h3 className="font-bold flex items-center text-[#d6f837] text-base">
                                 <PlusCircle className="w-5 h-5 mr-2 stroke-[2.5]" />
-                                { "Tambah Data Tengkulak"}
+                                {"Tambah Data Tengkulak"}
                             </h3>
                             <p className="text-[11px] text-white/70 mt-1 ml-7">
-                                Menambah data ini otomatis akan membuatkan/mengupdate akun akses login Tengkulak tersebut.
+                                Menambah data ini otomatis akan membuatkan/mengupdate akun akses
+                                login Tengkulak tersebut.
                             </p>
                         </div>
                         <form onSubmit={handleAdminSubmit} className="p-6 space-y-4">
                             <div>
-                                <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">Nama Tengkulak</label>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
+                                    Nama Tengkulak
+                                </label>
                                 <input
                                     type="text"
                                     required
                                     value={formData.nama}
-                                    onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, nama: e.target.value })
+                                    }
                                     className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                     placeholder="Masukkan nama lengkap"
                                 />
@@ -292,10 +444,17 @@ export default function PengelolaPage() {
 
                             {activeUser.role === "superadmin" && (
                                 <div>
-                                    <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">Dusun Target (Superadmin)</label>
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
+                                        Dusun Target (Superadmin)
+                                    </label>
                                     <select
                                         value={formData.dusun}
-                                        onChange={(e) => setFormData({ ...formData, dusun: Number(e.target.value) })}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                dusun: Number(e.target.value),
+                                            })
+                                        }
                                         className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                     >
                                         <option value={1}>Dusun 1</option>
@@ -308,23 +467,31 @@ export default function PengelolaPage() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">Harga Beras</label>
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
+                                        Harga Beras
+                                    </label>
                                     <input
                                         type="number"
                                         required
                                         value={formData.hargaBeras}
-                                        onChange={(e) => setFormData({ ...formData, hargaBeras: e.target.value })}
+                                        onChange={(e) =>
+                                            setFormData({ ...formData, hargaBeras: e.target.value })
+                                        }
                                         className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                         placeholder="Rp / Kg"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">Harga Gabah</label>
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
+                                        Harga Gabah
+                                    </label>
                                     <input
                                         type="number"
                                         required
                                         value={formData.hargaGabah}
-                                        onChange={(e) => setFormData({ ...formData, hargaGabah: e.target.value })}
+                                        onChange={(e) =>
+                                            setFormData({ ...formData, hargaGabah: e.target.value })
+                                        }
                                         className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                         placeholder="Rp / Kg"
                                     />
@@ -333,10 +500,17 @@ export default function PengelolaPage() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">Kuartal</label>
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
+                                        Kuartal
+                                    </label>
                                     <select
                                         value={formData.kuartal}
-                                        onChange={(e) => setFormData({ ...formData, kuartal: e.target.value as Kuartal })}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                kuartal: e.target.value as Kuartal,
+                                            })
+                                        }
                                         className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                     >
                                         <option value="Q1">Q1</option>
@@ -346,12 +520,16 @@ export default function PengelolaPage() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">Total Panen</label>
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
+                                        Total Panen
+                                    </label>
                                     <input
                                         type="number"
                                         required
                                         value={formData.totalPanen}
-                                        onChange={(e) => setFormData({ ...formData, totalPanen: e.target.value })}
+                                        onChange={(e) =>
+                                            setFormData({ ...formData, totalPanen: e.target.value })
+                                        }
                                         className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                         placeholder="Kg"
                                     />
@@ -368,6 +546,112 @@ export default function PengelolaPage() {
                                 </button>
                             </div>
                         </form>
+                            </>
+                        )}
+
+                        {activeUser.role === "superadmin" && activeTab === 'user' && (
+                            <>
+                                <div className="bg-[#121e14] p-5 border-b border-white/10 text-white">
+                                <h3 className="font-bold flex items-center text-white text-base">
+                                    <UserIcon className="w-5 h-5 mr-2 stroke-[2.5]" />
+                                    {"Tambah Pengguna"}
+                                </h3>
+                                <p className="text-[11px] text-white/70 mt-1 ml-7">
+                                    Buat akun Admin Dusun atau Tengkulak baru.
+                                </p>
+                            </div>
+                            <form onSubmit={handleUserSubmit} className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
+                                        Username
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={userFormData.username}
+                                        onChange={(e) =>
+                                            setUserFormData({ ...userFormData, username: e.target.value })
+                                        }
+                                        className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
+                                        placeholder="Username untuk login"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
+                                        Password
+                                    </label>
+                                    <input
+                                        type="password"
+                                        required
+                                        value={userFormData.password}
+                                        onChange={(e) =>
+                                            setUserFormData({ ...userFormData, password: e.target.value })
+                                        }
+                                        className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
+                                        placeholder="••••••••"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
+                                        Nama Lengkap
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={userFormData.name}
+                                        onChange={(e) =>
+                                            setUserFormData({ ...userFormData, name: e.target.value })
+                                        }
+                                        className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
+                                        placeholder="Nama Pengguna"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
+                                            Peran / Role
+                                        </label>
+                                        <select
+                                            value={userFormData.role}
+                                            onChange={(e) =>
+                                                setUserFormData({ ...userFormData, role: e.target.value })
+                                            }
+                                            className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
+                                        >
+                                            <option value="admin">Admin Dusun</option>
+                                            <option value="tengkulak">Tengkulak</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
+                                            Dusun
+                                        </label>
+                                        <select
+                                            value={userFormData.assignedDusun}
+                                            onChange={(e) =>
+                                                setUserFormData({ ...userFormData, assignedDusun: Number(e.target.value) })
+                                            }
+                                            className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
+                                        >
+                                            <option value={1}>Dusun 1</option>
+                                            <option value={2}>Dusun 2</option>
+                                            <option value={3}>Dusun 3</option>
+                                            <option value={4}>Dusun 4</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="pt-4 flex gap-3">
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmittingUser}
+                                        className="btn-forest flex-1 py-3 text-xs font-bold uppercase tracking-wider justify-center disabled:opacity-50"
+                                    >
+                                        <span>{isSubmittingUser ? "Menyimpan..." : "Buat Akun"}</span>
+                                    </button>
+                                </div>
+                            </form>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -375,8 +659,12 @@ export default function PengelolaPage() {
                     <div className="bg-white rounded-[1.75rem] border border-[#e2e0d4] shadow-sm overflow-hidden">
                         <div className="p-6 border-b border-[#e2e0d4] flex justify-between items-center bg-[#f4f3ea]">
                             <div>
-                                <h3 className="font-bold text-base text-[#121e14]">Data Tengkulak Dusun {activeUser.assignedDusun}</h3>
-                                <p className="text-xs text-[#121e14]/60">Daftar riwayat yang diinput oleh Dusun Anda.</p>
+                                <h3 className="font-bold text-base text-[#121e14]">
+                                    Data Tengkulak Dusun {activeUser.assignedDusun}
+                                </h3>
+                                <p className="text-xs text-[#121e14]/60">
+                                    Daftar riwayat yang diinput oleh Dusun Anda.
+                                </p>
                             </div>
                             <div className="bg-[#15291b] text-[#d6f837] px-4 py-1 rounded-full text-xs font-bold">
                                 {activeRecords.length} Data
@@ -394,16 +682,25 @@ export default function PengelolaPage() {
                                         <tr className="text-[11px] uppercase tracking-wider text-[#121e14]/60 bg-[#f4f3ea]">
                                             <th className="px-6 py-4 font-bold">Nama & Waktu</th>
                                             <th className="px-6 py-4 font-bold">Kuartal</th>
-                                            <th className="px-6 py-4 font-bold">Beras & Gabah / Kg</th>
+                                            <th className="px-6 py-4 font-bold">
+                                                Beras & Gabah / Kg
+                                            </th>
                                             <th className="px-6 py-4 font-bold">Total Panen (Kg)</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-[#e2e0d4]">
                                         {activeRecords.map((r) => (
-                                            <tr key={r.id} className="hover:bg-[#f4f3ea]/60 transition-colors text-xs font-semibold">
+                                            <tr
+                                                key={r.id}
+                                                className="hover:bg-[#f4f3ea]/60 transition-colors text-xs font-semibold"
+                                            >
                                                 <td className="px-6 py-4">
-                                                    <div className="font-bold text-sm text-[#121e14]">{r.nama}</div>
-                                                    <div className="text-[11px] text-[#121e14]/50 mt-0.5">{new Date(r.timestamp).toLocaleDateString('id-ID')}</div>
+                                                    <div className="font-bold text-sm text-[#121e14]">
+                                                        {r.nama}
+                                                    </div>
+                                                    <div className="text-[11px] text-[#121e14]/50 mt-0.5">
+                                                        {new Date(r.timestamp).toLocaleDateString("id-ID")}
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className="bg-[#15291b] text-[#d6f837] px-2.5 py-1 rounded-md text-[10px] font-bold">
@@ -411,11 +708,17 @@ export default function PengelolaPage() {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <div className="text-xs text-[#121e14]">Beras: Rp {r.hargaBeras.toLocaleString('id-ID')}</div>
-                                                    <div className="text-xs text-[#121e14]/70 mt-0.5">Gabah: Rp {r.hargaGabah.toLocaleString('id-ID')}</div>
+                                                    <div className="text-xs text-[#121e14]">
+                                                        Beras: Rp {r.hargaBeras.toLocaleString("id-ID")}
+                                                    </div>
+                                                    <div className="text-xs text-[#121e14]/70 mt-0.5">
+                                                        Gabah: Rp {r.hargaGabah.toLocaleString("id-ID")}
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className="font-bold text-[#15291b] text-xs">{(r.totalPanen || 0).toLocaleString('id-ID')} Kg</span>
+                                                    <span className="font-bold text-[#15291b] text-xs">
+                                                        {(r.totalPanen || 0).toLocaleString("id-ID")} Kg
+                                                    </span>
                                                 </td>
                                             </tr>
                                         ))}

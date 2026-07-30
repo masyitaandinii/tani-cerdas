@@ -69,6 +69,15 @@ async function seed() {
             assignedDusun: 4
         });
 
+        // Create a Tengkulak account
+        await User.create({
+            username: 'tengkulak1',
+            name: 'Tengkulak Budi', // Must match generated nama pattern
+            role: 'tengkulak',
+            password: hashedPassword,
+            assignedDusun: 1 // Assigned randomly, just for interface
+        });
+
         console.log('Creating sample records...');
         const dummyRecords = [];
         const kuartals = ['Q1', 'Q2', 'Q3', 'Q4'];
