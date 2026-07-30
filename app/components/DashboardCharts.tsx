@@ -1,19 +1,41 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { TengkulakRecord } from '../lib/data';
 
 interface DashboardChartsProps {
-    records: TengkulakRecord[];
     filterLevel: "Desa" | "Dusun";
     selectedDusun: number;
     selectedKuartal: string;
 }
 
-export function DashboardCharts({ records, filterLevel, selectedDusun, selectedKuartal }: DashboardChartsProps) {
+export function DashboardCharts({ filterLevel, selectedDusun, selectedKuartal }: DashboardChartsProps) {
+    const [records, setRecords] = useState<TengkulakRecord[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        async function fetchRecords() {
+            try {
+                const res = await fetch('/api/records');
+                if (res.ok) {
+                    const data = await res.json();
+                    setRecords(data);
+                } else {
+                    setError("Gagal memuat data grafik.");
+                }
+            } catch (error) {
+                console.error("Failed to fetch records:", error);
+                setError("Terjadi kesalahan koneksi.");
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchRecords();
+    }, []);
 
     // Prepare data based on the filter logic
     const chartData = useMemo(() => {
@@ -48,8 +70,8 @@ export function DashboardCharts({ records, filterLevel, selectedDusun, selectedK
         } else {
             // Filter level is Dusun -> show inner data by Tengkulak instead
             const dusunRecords = filtered.filter(r => r.dusun === selectedDusun);
-            return dusunRecords.map(r => ({
-                name: r.nama,
+            return dusunRecords.map((r, i) => ({
+                name: r.nama === 'Anonim' ? `Anonim ${i + 1}` : r.nama,
                 "Harga Beras": r.hargaBeras,
                 "Harga Gabah": r.hargaGabah,
             }));
@@ -74,7 +96,15 @@ export function DashboardCharts({ records, filterLevel, selectedDusun, selectedK
             </div>
 
             <div className="h-80 w-full">
-                {chartData.length === 0 ? (
+                {error ? (
+                    <div className="w-full h-full flex items-center justify-center text-red-500 bg-red-50 border-2 border-dashed border-red-200 rounded-2xl text-sm font-semibold">
+                        {error}
+                    </div>
+                ) : loading ? (
+                    <div className="w-full h-full flex items-center justify-center text-[#121e14]/50 border-2 border-dashed border-[#e2e0d4] rounded-2xl animate-pulse">
+                        Memuat data grafik...
+                    </div>
+                ) : chartData.length === 0 ? (
                     <div className="w-full h-full flex items-center justify-center text-[#121e14]/50 border-2 border-dashed border-[#e2e0d4] rounded-2xl text-sm font-semibold">
                         Tidak ada data untuk filter tersebut.
                     </div>
@@ -90,7 +120,16 @@ export function DashboardCharts({ records, filterLevel, selectedDusun, selectedK
                             }}
                         >
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e0d4" />
-                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#121e14', fontSize: 12, fontWeight: 700}} />
+                            <XAxis 
+                                dataKey="name" 
+                                axisLine={false} 
+                                tickLine={false} 
+                                tick={{fill: '#121e14', fontSize: 10, fontWeight: 700}}
+                                interval={filterLevel === "Dusun" ? 0 : "preserveEnd"}
+                                angle={filterLevel === "Dusun" ? -45 : 0}
+                                textAnchor={filterLevel === "Dusun" ? "end" : "middle"}
+                                height={filterLevel === "Dusun" ? 70 : 30}
+                            />
                             <YAxis axisLine={false} tickLine={false} tickFormatter={(val) => `Rp ${val / 1000}k`} tick={{fill: '#121e14', fontSize: 11}} />
                             <Tooltip
                                 cursor={{ fill: '#15291b', opacity: 0.05 }}
