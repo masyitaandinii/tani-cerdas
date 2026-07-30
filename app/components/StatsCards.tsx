@@ -43,7 +43,6 @@ export function StatsCards() {
     fetchRecords();
   }, []);
 
-  // Filter records to only include data from the current year
   const currentYear = new Date().getFullYear();
   const recordsThisYear = useMemo(() => {
     return records.filter(
@@ -51,14 +50,13 @@ export function StatsCards() {
     );
   }, [records, currentYear]);
 
-  // Time-series data for line chart (by Kuartal)
   const trendData = useMemo(() => {
     const kuartals = ["Q1", "Q2", "Q3", "Q4"];
     const labels: Record<string, string> = {
-      Q1: "Q1 (Jan-Mar)",
-      Q2: "Q2 (Apr-Jun)",
-      Q3: "Q3 (Jul-Sep)",
-      Q4: "Q4 (Okt-Des)",
+      Q1: "(Jan-Mar)",
+      Q2: "(Apr-Jun)",
+      Q3: "(Jul-Sep)",
+      Q4: "(Okt-Des)",
     };
 
     return kuartals.map((k) => {
@@ -117,9 +115,7 @@ export function StatsCards() {
 
   return (
     <div className="flex flex-col gap-8 w-full mb-8">
-      {/* Top Cards Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Card 1: Harga Rata-rata Beras */}
         <div className="bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm flex flex-col justify-between h-full col-span-1">
           <div>
             <div className="flex justify-between items-start mb-6">
@@ -140,7 +136,6 @@ export function StatsCards() {
           </div>
         </div>
 
-        {/* Card 2: Harga Rata-rata Gabah */}
         <div className="bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm flex flex-col justify-between h-full col-span-1">
           <div>
             <div className="flex justify-between items-start mb-6">
@@ -161,7 +156,6 @@ export function StatsCards() {
           </div>
         </div>
 
-        {/* Card 3: Total Estimasi Panen (HopeRoot Stat Highlight Card) */}
         <div className="bg-[#15291b] p-6 sm:p-8 rounded-[1.75rem] border border-white/10 shadow-lg flex flex-col justify-between h-full lg:col-span-2 relative overflow-hidden text-white">
           <div className="absolute -bottom-6 -right-6 w-36 h-36 bg-[#d6f837]/10 rounded-full blur-2xl pointer-events-none" />
 
@@ -187,16 +181,14 @@ export function StatsCards() {
               </h3>
               <p className="text-white/70 text-xs sm:text-sm mt-2 font-medium">
                 Estimasi akumulasi hasil panen gabah & beras dari seluruh dusun
-                pada kuartal berjalan.
+                pada periode berjalan.
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Section: Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
-        {/* Chart 1: Tren Harga (Kiri, lebih lebar) */}
         <div className="bg-white p-6 sm:p-8 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm flex flex-col relative overflow-hidden lg:col-span-2">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
             <div>
@@ -246,7 +238,6 @@ export function StatsCards() {
                     boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
                     backgroundColor: "#ffffff",
                   }}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   formatter={(value: any) => [
                     `Rp ${Math.round(Number(value) || 0).toLocaleString("id-ID")}`,
                     "",
@@ -297,7 +288,6 @@ export function StatsCards() {
           </div>
         </div>
 
-        {/* Chart 2: Volume Panen (Kanan) */}
         <div className="bg-white p-6 sm:p-8 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm flex flex-col relative overflow-hidden lg:col-span-1">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
             <div>
@@ -344,7 +334,6 @@ export function StatsCards() {
                     boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
                     backgroundColor: "#ffffff",
                   }}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   formatter={(value: any) => [
                     `${Math.round(Number(value) || 0).toLocaleString("id-ID")} Kg`,
                     "Panen",

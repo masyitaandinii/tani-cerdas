@@ -38,11 +38,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f4f3ea] text-[#121e14] relative pb-20 selection:bg-[#d6f837] selection:text-[#121e14]">
-      {/* FLOATING STICKY GLASSMORPHISM NAVBAR (Matching max-w-6xl container width across entire page) */}
+    <div className="min-h-screen bg-[#f4f3ea] text-[#121e14] relative selection:bg-[#d6f837] selection:text-[#121e14]">
       <header className="sticky top-4 z-50 px-4 sm:px-6 pointer-events-none">
         <div className="max-w-7xl mx-auto floating-navbar px-5 h-16 sm:h-18 flex items-center justify-between pointer-events-auto">
-          {/* Original TaniCerdas Logo */}
           <div className="flex items-center gap-3">
             <Image
               src="/Logo (3).svg"
@@ -56,7 +54,6 @@ export default function Home() {
             </span>
           </div>
 
-          {/* Desktop Navigation Links with Smooth Scrolling */}
           <nav className="hidden md:flex items-center gap-7 text-xs font-bold tracking-wider text-white/80 uppercase">
             <a
               href="#hero"
@@ -100,7 +97,6 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Mobile Hamburger Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
@@ -113,7 +109,6 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Mobile Menu Dropdown */}
         {mobileMenuOpen && (
           <div className="md:hidden max-w-7xl mx-auto mt-2 bg-[#132417]/95 backdrop-blur-xl border border-white/15 rounded-2xl p-6 space-y-4 shadow-2xl animate-in slide-in-from-top-2 pointer-events-auto">
             <nav className="flex flex-col gap-4 text-sm font-bold tracking-wider text-white/90 uppercase">
@@ -151,12 +146,10 @@ export default function Home() {
         )}
       </header>
 
-      {/* HERO SECTION WITH TERRACED RICE FIELD BACKGROUND */}
       <section
         id="hero"
         className="relative bg-[#132417] text-white min-h-[620px] lg:min-h-[680px] flex flex-col justify-between -mt-24 pt-28"
       >
-        {/* Background Image with Dark Forest Overlay */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           <Image
             src="/hero.jpg"
@@ -169,10 +162,8 @@ export default function Home() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#d6f837]/15 via-transparent to-transparent pointer-events-none" />
         </div>
 
-        {/* Hero Content Grid (Badge & H1 at Bottom Left, Desc Text at Right Center, Button at Bottom Right) */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-between w-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 items-stretch py-12 lg:py-16">
-            {/* Left Column - Badge and H1 Title at Bottom Left */}
             <div className="lg:col-span-8 flex flex-col justify-end space-y-6">
               <div>
                 <span className="badge-pill-dark inline-flex items-center">
@@ -186,9 +177,7 @@ export default function Home() {
               </h1>
             </div>
 
-            {/* Right Column - Desc Text at Right Center, Button at Bottom Right */}
             <div className="lg:col-span-4 flex flex-col justify-between space-y-6 lg:pl-6 h-fit">
-              {/* Right Center Paragraph */}
               <div className="my-auto py-4">
                 <p className="text-white/85 text-sm sm:text-base leading-relaxed font-medium">
                   Tani Cerdas membantu petani dan kelompok tani mengelola data
@@ -228,12 +217,10 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Global Stats Overview */}
         <div id="stats">
           <StatsCards />
         </div>
 
-        {/* Filter Controls (Smooth Sliding Switch Button) */}
         <div
           id="grafik"
           className="bg-white p-5 rounded-2xl border border-[#e2e0d4] shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between sticky top-28 z-30 backdrop-blur-md"
@@ -246,9 +233,7 @@ export default function Home() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-            {/* Level Filter (Smooth Sliding Indicator Button Switch) */}
             <div className="relative flex bg-[#f4f3ea] p-1 border border-[#e2e0d4] rounded-xl overflow-hidden">
-              {/* Animated Sliding Pill */}
               <div
                 className="absolute top-1 bottom-1 bg-[#15291b] rounded-lg shadow-sm transition-all duration-300 ease-out"
                 style={{
@@ -279,7 +264,6 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Dusun Dropdown Select with Smooth Fade/Scale Transition */}
             <div
               className={`transition-all duration-300 ease-out overflow-hidden ${
                 filterLevel === "Dusun"
@@ -300,22 +284,20 @@ export default function Home() {
               </select>
             </div>
 
-            {/* Kuartal Filter */}
             <select
               value={selectedKuartal}
               onChange={(e) => setSelectedKuartal(e.target.value)}
               className="px-4 py-2 bg-[#f4f3ea] border border-[#e2e0d4] rounded-xl text-xs font-bold text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
             >
-              <option value="ALL">Semua Kuartal</option>
-              <option value="Q1">Q1 (Jan-Mar)</option>
-              <option value="Q2">Q2 (Apr-Jun)</option>
-              <option value="Q3">Q3 (Jul-Sep)</option>
-              <option value="Q4">Q4 (Okt-Des)</option>
+              <option value="ALL">Semua Periode</option>
+              <option value="Q1">Periode 1 (Jan-Mar)</option>
+              <option value="Q2">Periode 2 (Apr-Jun)</option>
+              <option value="Q3">Periode 3 (Jul-Sep)</option>
+              <option value="Q4">Periode 4 (Okt-Des)</option>
             </select>
           </div>
         </div>
 
-        {/* Charts & Distribution Area */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <DashboardCharts
@@ -328,7 +310,6 @@ export default function Home() {
             <DusunDistributionCard selectedKuartal={selectedKuartal} />
           </div>
         </div>
-        {/* Chatbot CTA Banner */}
         <div
           id="bot"
           className="bg-[#15291b] p-8 sm:p-10 rounded-[2rem] text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative border border-white/10"
@@ -360,7 +341,6 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Floating Chatbot */}
       <ChatbotSection />
     </div>
   );

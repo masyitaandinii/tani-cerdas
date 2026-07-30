@@ -13,12 +13,10 @@ export function ChatbotSection() {
         e.preventDefault();
         if (!input.trim()) return;
 
-        // Add user message
         setMessages(prev => [...prev, { role: 'user', content: input }]);
         const currentInput = input;
         setInput('');
 
-        // Mock AI reply
         setTimeout(() => {
             setMessages(prev => [...prev, {
                 role: 'ai',
@@ -29,7 +27,6 @@ export function ChatbotSection() {
 
     return (
         <>
-            {/* Floating Button if closed */}
             {!isChatbotOpen && (
                 <button
                     onClick={() => setChatbotOpen(true)}
@@ -40,10 +37,8 @@ export function ChatbotSection() {
                 </button>
             )}
 
-            {/* Chat Window */}
             {isChatbotOpen && (
                 <div className="fixed bottom-6 right-6 w-[360px] sm:w-[420px] h-[520px] bg-white border border-[#e2e0d4] shadow-2xl rounded-[1.75rem] flex flex-col overflow-hidden z-50 animate-in slide-in-from-bottom-8">
-                    {/* Header */}
                     <div className="bg-[#15291b] p-4 px-5 flex justify-between items-center text-white border-b border-white/10">
                         <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-full bg-[#d6f837] text-[#121e14] flex items-center justify-center font-bold">
@@ -62,7 +57,6 @@ export function ChatbotSection() {
                         </button>
                     </div>
 
-                    {/* Messages Container */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#f4f3ea]">
                         {messages.map((m, i) => (
                             <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -77,7 +71,6 @@ export function ChatbotSection() {
                         ))}
                     </div>
 
-                    {/* Input Form */}
                     <form onSubmit={handleSend} className="p-3 bg-white border-t border-[#e2e0d4] flex items-center gap-2">
                         <input
                             type="text"

@@ -9,7 +9,6 @@ import Image from "next/image";
 export default function PengelolaPage() {
     const { data: session, status } = useSession();
 
-    // Petakan session NextAuth ke format activeUser agar komponen di bawahnya tidak rusak
     const activeUser = session?.user
         ? {
             name: session.user.name || "Pengguna",
@@ -18,7 +17,6 @@ export default function PengelolaPage() {
         }
         : null;
 
-    // Login Form State
     const [loginUsername, setLoginUsername] = useState("");
     const [loginPassword, setLoginPassword] = useState("");
     const [loginError, setLoginError] = useState("");
@@ -58,7 +56,6 @@ export default function PengelolaPage() {
 
     useEffect(() => {
         if (session?.user) {
-            // eslint-disable-next-line
             fetchRecords();
         }
     }, [session?.user]);
@@ -250,7 +247,6 @@ export default function PengelolaPage() {
         );
     }
 
-    // TENGKULAK DASHBOARD
     if (activeUser.role === "tengkulak") {
         const myRecords = records.filter(
             (r) => r.nama.toLowerCase() === activeUser.name.toLowerCase(),
@@ -324,7 +320,7 @@ export default function PengelolaPage() {
                                 <thead>
                                     <tr className="text-[11px] uppercase tracking-wider text-[#121e14]/60 bg-[#f4f3ea]">
                                         <th className="px-6 py-4 font-bold">Tanggal</th>
-                                        <th className="px-6 py-4 font-bold">Kuartal</th>
+                                        <th className="px-6 py-4 font-bold">Periode</th>
                                         <th className="px-6 py-4 font-bold">Harga Beras</th>
                                         <th className="px-6 py-4 font-bold">Harga Gabah</th>
                                         <th className="px-6 py-4 font-bold">Total Panen (Kg)</th>
@@ -341,7 +337,7 @@ export default function PengelolaPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className="bg-[#15291b] text-[#d6f837] px-2.5 py-1 rounded-md text-[10px] font-bold">
-                                                    {r.kuartal}
+                                                    {r.kuartal ? r.kuartal.replace('Q', 'Periode ') : ''}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-[#121e14]">
@@ -364,9 +360,6 @@ export default function PengelolaPage() {
         );
     }
 
-    // ADMIN DASHBOARD
-    // Note: For superadmin, they might see all records if they don't have assignedDusun,
-    // or we just show them everything if assignedDusun is not set.
     const activeRecords =
         activeUser.role === "superadmin"
             ? records
@@ -501,7 +494,7 @@ export default function PengelolaPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
-                                        Kuartal
+                                        Periode
                                     </label>
                                     <select
                                         value={formData.kuartal}
@@ -513,10 +506,10 @@ export default function PengelolaPage() {
                                         }
                                         className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                     >
-                                        <option value="Q1">Q1</option>
-                                        <option value="Q2">Q2</option>
-                                        <option value="Q3">Q3</option>
-                                        <option value="Q4">Q4</option>
+                                        <option value="Q1">Periode 1 (Jan-Mar)</option>
+                                        <option value="Q2">Periode 2 (Apr-Jun)</option>
+                                        <option value="Q3">Periode 3 (Jul-Sep)</option>
+                                        <option value="Q4">Periode 4 (Okt-Des)</option>
                                     </select>
                                 </div>
                                 <div>
@@ -681,7 +674,7 @@ export default function PengelolaPage() {
                                     <thead>
                                         <tr className="text-[11px] uppercase tracking-wider text-[#121e14]/60 bg-[#f4f3ea]">
                                             <th className="px-6 py-4 font-bold">Nama & Waktu</th>
-                                            <th className="px-6 py-4 font-bold">Kuartal</th>
+                                            <th className="px-6 py-4 font-bold">Periode</th>
                                             <th className="px-6 py-4 font-bold">
                                                 Beras & Gabah / Kg
                                             </th>
@@ -704,7 +697,7 @@ export default function PengelolaPage() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className="bg-[#15291b] text-[#d6f837] px-2.5 py-1 rounded-md text-[10px] font-bold">
-                                                        {r.kuartal}
+                                                        {r.kuartal ? r.kuartal.replace('Q', 'Periode ') : ''}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">

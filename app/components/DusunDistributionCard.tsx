@@ -50,7 +50,6 @@ export function DusunDistributionCard({ selectedKuartal = "ALL" }: Props) {
 
         filteredRecords.forEach(r => {
             if (dusunTotals[r.dusun] !== undefined) {
-                // Convert kg to ton (divide by 1000)
                 dusunTotals[r.dusun] += (r.totalPanen || 0) / 1000;
             }
         });
@@ -62,13 +61,11 @@ export function DusunDistributionCard({ selectedKuartal = "ALL" }: Props) {
             { id: 4, name: "Dusun 4", total: dusunTotals[4] },
         ];
 
-        // Sort descending
         dataList.sort((a, b) => b.total - a.total);
 
         return dataList;
     }, [records, selectedKuartal, currentYear]);
 
-    // Find max value to calculate percentage width
     const maxTotal = useMemo(() => {
         const max = Math.max(...distribution.map(d => d.total));
         return max > 0 ? max : 1;
@@ -99,7 +96,7 @@ export function DusunDistributionCard({ selectedKuartal = "ALL" }: Props) {
                     ) : distribution.every(d => d.total === 0) ? (
                         <div className="w-full py-8 flex flex-col items-center justify-center text-[#121e14]/50 border-2 border-dashed border-[#e2e0d4] rounded-2xl text-sm font-semibold">
                             <span>Belum ada data panen.</span>
-                            <span className="text-xs font-normal mt-1 opacity-75">Tahun {currentYear} | {selectedKuartal === 'ALL' ? 'Semua Kuartal' : selectedKuartal}</span>
+                            <span className="text-xs font-normal mt-1 opacity-75">Tahun {currentYear} | {selectedKuartal === 'ALL' ? 'Semua Periode' : selectedKuartal.replace('Q', 'Periode ')}</span>
                         </div>
                     ) : (
                         distribution.map((item) => {
