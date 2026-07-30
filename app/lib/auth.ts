@@ -1,0 +1,67 @@
+import { NextAuthOptions } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import bcrypt from 'bcrypt';
+import connectToDatabase from './db';
+import { User } from './models/User';
+
+if (!process.env.NEXTAUTH_SECRET && process.env.NODE_ENV !== 'test') {
+    throw new Error('NEXTAUTH_SECRET wajib di-set di environment variable');
+}
+
+export const authOptions: NextAuthOptions = {
+    providers: [
+        CredentialsProvider({
+            name: 'Credentials',
+            credentials: {
+                username: { label: "Username", type: "text" },
+                password: { label: "Password", type: "password" }
+            },
+            async authorize(credentials) {
+                if (!credentials?.username || !credentials?.password) {
+                    throw new Error('Username and password are required');
+                }
+
+                await connectToDatabase();
+                
+                const user = await User.findOne({ username: credentials.username });
+                
+                if (!user || !user.password) {
+                    throw new Error('Invalid username or password');
+                }
+
+                const isValid = await bcrypt.compare(credentials.password, user.password);
+                
+                if (!isValid) {
+                    throw new Error('Invalid username or password');
+                }
+
+                return {
+                    id: user._id.toString(),
+                    name: user.name,
+                    role: user.role,
+                    assignedDusun: user.assignedDusun
+                };
+            }
+        })
+    ],
+    callbacks: {
+        async jwt({ token, user }) {
+            if (user) {
+                token.role = user.role;
+                token.assignedDusun = user.assignedDusun;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            if (session?.user) {
+                session.user.role = token.role;
+                session.user.assignedDusun = token.assignedDusun;
+            }
+            return session;
+        }
+    },
+    session: {
+        strategy: 'jwt'
+    },
+    secret: process.env.NEXTAUTH_SECRET,
+};

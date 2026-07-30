@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -10,7 +11,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                     {/* TaniCerdas Original Logo & Brand */}
                     <div className="flex items-center gap-3">
-                        <img src="/Logo (3).svg" alt="TaniCerdas Logo" className="h-8 w-auto object-contain" />
+                        <Image src="/Logo (3).svg" alt="TaniCerdas Logo" width={32} height={32} className="h-8 w-auto object-contain" />
                         <span className="text-xl font-bold tracking-tight text-white font-sans flex items-center gap-2">
                             TaniCerdas <span className="text-xs font-semibold px-2 py-0.5 rounded bg-[#d6f837]/20 text-[#d6f837] border border-[#d6f837]/30">Admin</span>
                         </span>
