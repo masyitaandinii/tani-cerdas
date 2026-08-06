@@ -1,0 +1,460 @@
+{
+  "communities": {
+    "0": [
+      "app_api_auth_nextauth_route",
+      "app_api_auth_nextauth_route_handler",
+      "app_api_records_id_route",
+      "app_api_records_id_route_delete",
+      "app_api_records_id_route_put",
+      "app_api_records_id_route_recordschema",
+      "app_api_records_route",
+      "app_api_records_route_get",
+      "app_api_records_route_post",
+      "app_api_records_route_recordschema",
+      "app_api_records_stats_route",
+      "app_api_records_stats_route_get",
+      "app_api_users_id_route",
+      "app_api_users_id_route_delete",
+      "app_api_users_route",
+      "app_api_users_route_get",
+      "app_api_users_route_post",
+      "app_api_users_route_userinputschema",
+      "app_lib_auth",
+      "app_lib_auth_authoptions",
+      "app_lib_constants_dusun_limits",
+      "app_lib_constants_roles",
+      "app_lib_db",
+      "app_lib_db_connecttodatabase",
+      "app_lib_models_tengkulakrecord",
+      "app_lib_models_tengkulakrecord_itengkulakrecord",
+      "app_lib_models_tengkulakrecord_tengkulakrecordschema",
+      "app_lib_models_user",
+      "app_lib_models_user_iuser",
+      "app_lib_models_user_userschema",
+      "scripts_seed",
+      "scripts_seed_seed",
+      "scripts_setup_superadmin",
+      "scripts_setup_superadmin_run",
+      "tests_auth_test",
+      "tests_models_test",
+      "tests_records_test",
+      "tests_records_test_mockrequest",
+      "types_next_auth_d_user"
+    ],
+    "1": [
+      "dotenv",
+      "eslint",
+      "eslint_config_next",
+      "package_devdependencies",
+      "package_devdependencies_dotenv",
+      "package_devdependencies_eslint",
+      "package_devdependencies_eslint_config_next",
+      "package_devdependencies_tailwindcss",
+      "package_devdependencies_tailwindcss_postcss",
+      "package_devdependencies_tsx",
+      "package_devdependencies_types_bcrypt",
+      "package_devdependencies_types_node",
+      "package_devdependencies_types_react",
+      "package_devdependencies_types_react_dom",
+      "package_devdependencies_typescript",
+      "package_devdependencies_vitest",
+      "tailwindcss",
+      "tailwindcss_postcss",
+      "tsx",
+      "types_bcrypt",
+      "types_node",
+      "types_react",
+      "types_react_dom",
+      "typescript",
+      "vitest"
+    ],
+    "2": [
+      "app_components_chatbotsection",
+      "app_components_chatbotsection_chatbotsection",
+      "app_components_dashboardcharts",
+      "app_components_dashboardcharts_dashboardcharts",
+      "app_components_dashboardcharts_dashboardchartsprops",
+      "app_components_dusundistributioncard",
+      "app_components_dusundistributioncard_dusundistributioncard",
+      "app_components_dusundistributioncard_props",
+      "app_components_statscards",
+      "app_components_statscards_statscards",
+      "app_layout",
+      "app_layout_metadata",
+      "app_layout_plusjakartasans",
+      "app_layout_rootlayout",
+      "app_lib_store",
+      "app_lib_store_appcontext",
+      "app_lib_store_appprovider",
+      "app_lib_store_appstate",
+      "app_lib_store_useappstore",
+      "app_page",
+      "app_page_home",
+      "app_providers",
+      "app_providers_providers"
+    ],
+    "3": [
+      "bcrypt",
+      "lucide_react",
+      "mongoose",
+      "next",
+      "next_auth",
+      "package_dependencies",
+      "package_dependencies_bcrypt",
+      "package_dependencies_lucide_react",
+      "package_dependencies_mongoose",
+      "package_dependencies_next",
+      "package_dependencies_next_auth",
+      "package_dependencies_react",
+      "package_dependencies_react_dom",
+      "package_dependencies_recharts",
+      "package_dependencies_zod",
+      "react",
+      "react_dom",
+      "recharts",
+      "zod"
+    ],
+    "4": [
+      "ref_dom",
+      "ref_dom_iterable",
+      "ref_esnext",
+      "tsconfig_compileroptions",
+      "tsconfig_compileroptions_allowjs",
+      "tsconfig_compileroptions_esmoduleinterop",
+      "tsconfig_compileroptions_incremental",
+      "tsconfig_compileroptions_isolatedmodules",
+      "tsconfig_compileroptions_jsx",
+      "tsconfig_compileroptions_lib",
+      "tsconfig_compileroptions_module",
+      "tsconfig_compileroptions_moduleresolution",
+      "tsconfig_compileroptions_noemit",
+      "tsconfig_compileroptions_paths",
+      "tsconfig_compileroptions_plugins",
+      "tsconfig_compileroptions_resolvejsonmodule",
+      "tsconfig_compileroptions_skiplibcheck",
+      "tsconfig_compileroptions_strict",
+      "tsconfig_compileroptions_target"
+    ],
+    "5": [
+      "ref_mts",
+      "ref_next_dev_types_ts",
+      "ref_next_env_d_ts",
+      "ref_next_types_ts",
+      "ref_node_modules",
+      "ref_ts",
+      "ref_tsx",
+      "tsconfig",
+      "tsconfig_exclude",
+      "tsconfig_include"
+    ],
+    "6": [
+      "agents_next_docs",
+      "agents_nextjs",
+      "agents_nextjs_agent_rules",
+      "claude_agents_md",
+      "readme_create_next_app",
+      "readme_geist",
+      "readme_next_font",
+      "readme_nextjs",
+      "readme_vercel"
+    ],
+    "7": [
+      "package",
+      "package_name",
+      "package_private",
+      "package_scripts",
+      "package_scripts_build",
+      "package_scripts_dev",
+      "package_scripts_lint",
+      "package_scripts_start",
+      "package_version"
+    ],
+    "8": [
+      "app_api_chat_route",
+      "app_api_chat_route_allowed_keywords",
+      "app_api_chat_route_post",
+      "app_lib_constants",
+      "app_lib_constants_chat_limits",
+      "tests_chat_test",
+      "tests_chat_test_mockrequest"
+    ],
+    "9": [
+      "app_lib_data",
+      "app_lib_data_initial_tengkulak_records",
+      "app_lib_data_initial_users",
+      "app_lib_data_kuartal",
+      "app_lib_data_tengkulakrecord",
+      "app_lib_data_user"
+    ],
+    "10": [
+      "types_next_auth_d",
+      "types_next_auth_d_jwt",
+      "types_next_auth_d_next_auth",
+      "types_next_auth_d_next_auth_jwt",
+      "types_next_auth_d_session"
+    ],
+    "11": [
+      "public_logo__3__connected_dots",
+      "public_logo__3__leaf_shape",
+      "public_logo__3__logo"
+    ],
+    "12": [
+      "app_admin_layout",
+      "app_admin_layout_adminlayout"
+    ],
+    "13": [
+      "app_admin_page",
+      "app_admin_page_pengelolapage"
+    ],
+    "14": [
+      "app_robots",
+      "app_robots_robots"
+    ],
+    "15": [
+      "app_sitemap",
+      "app_sitemap_sitemap"
+    ],
+    "16": [
+      "eslint_config",
+      "eslint_config_eslintconfig"
+    ],
+    "17": [
+      "middleware",
+      "middleware_config"
+    ],
+    "18": [
+      "next_config",
+      "next_config_nextconfig"
+    ],
+    "19": [
+      "postcss_config",
+      "postcss_config_config"
+    ],
+    "20": [
+      "public_hero_agricultural_field",
+      "public_hero_crop_rows"
+    ],
+    "21": [
+      "public_hero_bg_png_agriculture",
+      "public_hero_bg_png_terraced_rice_paddies"
+    ],
+    "22": [
+      "public_file_icon"
+    ],
+    "23": [
+      "public_globe_svg"
+    ],
+    "24": [
+      "public_hero_bg_png_houses"
+    ],
+    "25": [
+      "public_hero_bg_png_mist"
+    ],
+    "26": [
+      "public_hero_bg_png_mountains"
+    ],
+    "27": [
+      "public_hero_bg_png_river"
+    ],
+    "28": [
+      "public_logo__2__logo"
+    ],
+    "29": [
+      "public_next_logo"
+    ],
+    "30": [
+      "public_vercel_logo"
+    ],
+    "31": [
+      "public_window_icon"
+    ],
+    "32": [
+      "readme_app_page_tsx"
+    ],
+    "33": [
+      "vitest_config"
+    ]
+  },
+  "cohesion": {
+    "0": 0.11201079622132254,
+    "1": 0.08,
+    "2": 0.13043478260869565,
+    "3": 0.10526315789473684,
+    "4": 0.10526315789473684,
+    "5": 0.2,
+    "6": 0.2222222222222222,
+    "7": 0.2222222222222222,
+    "8": 0.42857142857142855,
+    "9": 0.3333333333333333,
+    "10": 0.4,
+    "11": 0.6666666666666666,
+    "12": 1.0,
+    "13": 1.0,
+    "14": 1.0,
+    "15": 1.0,
+    "16": 1.0,
+    "17": 1.0,
+    "18": 1.0,
+    "19": 1.0,
+    "20": 1.0,
+    "21": 1.0,
+    "22": 1.0,
+    "23": 1.0,
+    "24": 1.0,
+    "25": 1.0,
+    "26": 1.0,
+    "27": 1.0,
+    "28": 1.0,
+    "29": 1.0,
+    "30": 1.0,
+    "31": 1.0,
+    "32": 1.0,
+    "33": 1.0
+  },
+  "gods": [
+    {
+      "id": "tsconfig_compileroptions",
+      "label": "compilerOptions",
+      "degree": 16
+    },
+    {
+      "id": "app_lib_db_connecttodatabase",
+      "label": "connectToDatabase()",
+      "degree": 15
+    },
+    {
+      "id": "app_lib_auth_authoptions",
+      "label": "authOptions",
+      "degree": 8
+    },
+    {
+      "id": "tsconfig_include",
+      "label": "include",
+      "degree": 7
+    },
+    {
+      "id": "types_next_auth_d_user",
+      "label": "User",
+      "degree": 6
+    },
+    {
+      "id": "app_lib_constants_roles",
+      "label": "ROLES",
+      "degree": 5
+    },
+    {
+      "id": "app_lib_store_useappstore",
+      "label": "useAppStore()",
+      "degree": 5
+    },
+    {
+      "id": "package_scripts",
+      "label": "scripts",
+      "degree": 5
+    },
+    {
+      "id": "tsconfig_compileroptions_lib",
+      "label": "lib",
+      "degree": 4
+    },
+    {
+      "id": "readme_nextjs",
+      "label": "Next.js",
+      "degree": 4
+    }
+  ],
+  "surprises": [
+    {
+      "source": "Next.js",
+      "target": "Next.js",
+      "source_files": [
+        "README.md",
+        "AGENTS.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "semantically_similar_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; semantically similar concepts with no structural link"
+    },
+    {
+      "source": "AGENTS.md",
+      "target": "nextjs-agent-rules",
+      "source_files": [
+        "CLAUDE.md",
+        "AGENTS.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "references",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories"
+    },
+    {
+      "source": "ChatbotSection()",
+      "target": "react",
+      "source_files": [
+        "app/components/ChatbotSection.tsx",
+        "package.json"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories; bridges separate communities"
+    },
+    {
+      "source": "seed()",
+      "target": "User",
+      "source_files": [
+        "scripts/seed.ts",
+        "types/next-auth.d.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories; peripheral node `seed()` unexpectedly reaches hub `User`"
+    },
+    {
+      "source": "run()",
+      "target": "User",
+      "source_files": [
+        "scripts/setup-superadmin.ts",
+        "types/next-auth.d.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories; peripheral node `run()` unexpectedly reaches hub `User`"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `dependencies` connect `dependencies` to `package.json`?",
+      "why": "High betweenness centrality (0.091) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `devDependencies` connect `devDependencies` to `package.json`?",
+      "why": "High betweenness centrality (0.071) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `react` connect `dependencies` to `app/page.tsx`?",
+      "why": "High betweenness centrality (0.060) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `Kuartal`, `TengkulakRecord`, `User` to the rest of the system?",
+      "why": "100 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `connectToDatabase` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.11201079622132254 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `devDependencies` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.08 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `app/page.tsx` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.13043478260869565 - nodes in this community are weakly interconnected."
+    }
+  ]
+}
