@@ -92,7 +92,6 @@ export async function GET(request: Request) {
         ]);
 
         const formattedUsers = users.map((u) => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { _id, ...rest } = u as Record<string, unknown>;
             return { ...rest, id: _id.toString() };
         });

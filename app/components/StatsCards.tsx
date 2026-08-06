@@ -238,7 +238,7 @@ export function StatsCards() {
                     boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
                     backgroundColor: "#ffffff",
                   }}
-                  formatter={(value: any) => [
+                  formatter={(value: number | string) => [
                     `Rp ${Math.round(Number(value) || 0).toLocaleString("id-ID")}`,
                     "",
                   ]}
@@ -334,7 +334,7 @@ export function StatsCards() {
                     boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
                     backgroundColor: "#ffffff",
                   }}
-                  formatter={(value: any) => [
+                  formatter={(value: number | string) => [
                     `${Math.round(Number(value) || 0).toLocaleString("id-ID")} Kg`,
                     "Panen",
                   ]}
