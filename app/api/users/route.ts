@@ -92,8 +92,8 @@ export async function GET(request: Request) {
         ]);
 
         const formattedUsers = users.map((u) => {
-            const { _id, ...rest } = u as Record<string, unknown>;
-            return { ...rest, id: _id.toString() };
+            const { _id, ...rest } = u as unknown as Record<string, unknown>;
+            return { ...rest, id: String(_id) };
         });
 
         return NextResponse.json({
