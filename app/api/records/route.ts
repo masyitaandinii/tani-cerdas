@@ -15,11 +15,27 @@ const RecordSchema = z.object({
     totalPanen: z.number().positive()
 });
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
         await connectToDatabase();
         
-        const records = await TengkulakRecord.find({}).lean();
+        const { searchParams } = new URL(request.url);
+        
+        const page = parseInt(searchParams.get('page') || '1', 10);
+        const limit = parseInt(searchParams.get('limit') || '0', 10); // 0 means no pagination
+        const dusun = searchParams.get('dusun');
+
+        const query: Record<string, unknown> = {};
+        if (dusun) {
+            query.dusun = parseInt(dusun, 10);
+        }
+
+        const skip = limit > 0 ? (page - 1) * limit : 0;
+        
+        const [records, total] = await Promise.all([
+            limit > 0 ? TengkulakRecord.find(query).skip(skip).limit(limit).lean() : TengkulakRecord.find(query).lean(),
+            TengkulakRecord.countDocuments(query)
+        ]);
 
         const formattedRecords = records.map(r => {
             // Strip authorId to avoid exposing internal DB user IDs, but expose the real 'nama' to everyone
@@ -27,6 +43,18 @@ export async function GET() {
             const { authorId, _id, ...rest } = r as any;
             return { ...rest, id: _id.toString() };
         });
+
+        if (limit > 0) {
+            return NextResponse.json({
+                data: formattedRecords,
+                meta: {
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit)
+                }
+            });
+        }
 
         return NextResponse.json(formattedRecords);
     } catch (error) {

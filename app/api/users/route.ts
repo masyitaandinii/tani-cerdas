@@ -60,3 +60,53 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Internal Server Error', details: null }, { status: 500 });
     }
 }
+
+export async function GET(request: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+
+        if (!session || !session.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        if (session.user.role !== ROLES.SUPERADMIN) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
+        const { searchParams } = new URL(request.url);
+        const page = parseInt(searchParams.get('page') || '1', 10);
+        const limit = parseInt(searchParams.get('limit') || '10', 10);
+        const dusun = searchParams.get('dusun');
+
+        const query: Record<string, unknown> = {};
+        if (dusun) {
+            query.assignedDusun = parseInt(dusun, 10);
+        }
+
+        await connectToDatabase();
+
+        const skip = (page - 1) * limit;
+        const [users, total] = await Promise.all([
+            User.find(query).select('-password').skip(skip).limit(limit).lean(),
+            User.countDocuments(query)
+        ]);
+
+        const formattedUsers = users.map((u) => {
+            const { _id, ...rest } = u as unknown as Record<string, unknown>;
+            return { ...rest, id: String(_id) };
+        });
+
+        return NextResponse.json({
+            data: formattedUsers,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        });
+    } catch (error) {
+        console.error('GET /api/users error:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+}

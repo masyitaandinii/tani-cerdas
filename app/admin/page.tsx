@@ -56,6 +56,7 @@ export default function PengelolaPage() {
 
     useEffect(() => {
         if (session?.user) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             fetchRecords();
         }
     }, [session?.user]);

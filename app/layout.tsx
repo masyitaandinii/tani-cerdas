@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 import { AppProvider } from "./lib/store";
 import { Providers } from "./providers";
@@ -73,10 +74,10 @@ export default function RootLayout({
                   <div>
                     <h3 className="font-bold text-lg mb-4">Navigasi</h3>
                     <ul className="space-y-3 text-sm text-white/70 font-medium">
-                      <li><a href="/" className="hover:text-[#d6f837] transition-colors">Beranda</a></li>
-                      <li><a href="/admin" className="hover:text-[#d6f837] transition-colors">Portal Pengelola</a></li>
-                      <li><a href="#" className="hover:text-[#d6f837] transition-colors">Statistik Desa</a></li>
-                      <li><a href="#" className="hover:text-[#d6f837] transition-colors">Panduan Petani</a></li>
+                      <li><Link href="/" className="hover:text-[#d6f837] transition-colors">Beranda</Link></li>
+                      <li><Link href="/admin" className="hover:text-[#d6f837] transition-colors">Portal Pengelola</Link></li>
+                      <li><Link href="#" className="hover:text-[#d6f837] transition-colors">Statistik Desa</Link></li>
+                      <li><Link href="#" className="hover:text-[#d6f837] transition-colors">Panduan Petani</Link></li>
                     </ul>
                   </div>
                   <div>
