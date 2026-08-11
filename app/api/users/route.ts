@@ -87,7 +87,7 @@ export async function GET(request: Request) {
 
         const skip = (page - 1) * limit;
         const [users, total] = await Promise.all([
-            User.find(query).select('-password').skip(skip).limit(limit).lean(),
+            User.find(query).select('-password').sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
             User.countDocuments(query)
         ]);
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import {
   CircleDollarSign,
   Tractor,
@@ -165,9 +166,14 @@ export function StatsCards() {
                 <span className="badge-bullet"></span>
                 TOTAL PANEN DESA {currentYear}
               </span>
-              <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-[#d6f837]">
+              <Link
+                href="/detail"
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-[#d6f837] hover:text-[#121e14] transition-all flex items-center justify-center text-[#d6f837]"
+                title="Lihat Detail Statistik"
+              >
+                
                 <ArrowUpRight className="w-5 h-5 stroke-[2.5]" />
-              </span>
+              </Link>
             </div>
 
             <div>
@@ -179,10 +185,19 @@ export function StatsCards() {
                   Ton
                 </span>
               </h3>
-              <p className="text-white/70 text-xs sm:text-sm mt-2 font-medium">
-                Estimasi akumulasi hasil panen gabah & beras dari seluruh dusun
-                pada periode berjalan.
-              </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-3">
+                <p className="text-white/70 text-xs sm:text-sm font-medium flex-1">
+                  Estimasi akumulasi hasil panen gabah & beras dari seluruh dusun
+                  pada periode berjalan.
+                </p>
+                {/* <Link
+                  href="/detail"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-[#d6f837] text-white hover:text-[#121e14] transition-all text-xs font-bold shrink-0 self-start sm:self-auto"
+                >
+                  <span>Lihat Statistik</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </Link> */}
+              </div>
             </div>
           </div>
         </div>

@@ -3,18 +3,17 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 import { useAppStore } from "./lib/store";
+import { Navbar } from "./components/Navbar";
 import { StatsCards } from "./components/StatsCards";
 import { DashboardCharts } from "./components/DashboardCharts";
 import { DusunDistributionCard } from "./components/DusunDistributionCard";
 import { ChatbotSection } from "./components/ChatbotSection";
 import {
   Filter,
-  Users,
   Bot,
   ArrowUpRight,
-  Menu,
-  X,
   Lightbulb,
 } from "lucide-react";
 
@@ -23,128 +22,10 @@ export default function Home() {
   const [filterLevel, setFilterLevel] = useState<"Desa" | "Dusun">("Desa");
   const [selectedDusun, setSelectedDusun] = useState<number>(1);
   const [selectedKuartal, setSelectedKuartal] = useState<string>("ALL");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
-
-  const handleNavClick = (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    targetId: string,
-  ) => {
-    e.preventDefault();
-    const elem = document.getElementById(targetId);
-    if (elem) {
-      elem.scrollIntoView({ behavior: "smooth" });
-    }
-    setMobileMenuOpen(false);
-  };
 
   return (
     <div className="min-h-screen bg-[#f4f3ea] text-[#121e14] relative selection:bg-[#d6f837] selection:text-[#121e14]">
-      <header className="sticky top-4 z-50 px-4 sm:px-6 pointer-events-none">
-        <div className="max-w-7xl mx-auto floating-navbar px-5 h-16 sm:h-18 flex items-center justify-between pointer-events-auto">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/Logo (3).svg"
-              alt="TaniCerdas Logo"
-              width={32}
-              height={32}
-              className="h-8 w-auto object-contain"
-            />
-            <span className="text-xl sm:text-2xl font-bold tracking-tight text-white font-sans">
-              TaniCerdas
-            </span>
-          </div>
-
-          <nav className="hidden md:flex items-center gap-7 text-xs font-bold tracking-wider text-white/80 uppercase">
-            <a
-              href="#hero"
-              onClick={(e) => handleNavClick(e, "hero")}
-              className="hover:text-[#d6f837] transition-colors"
-            >
-              Beranda
-            </a>
-            <a
-              href="#overview"
-              onClick={(e) => handleNavClick(e, "overview")}
-              className="hover:text-[#d6f837] transition-colors"
-            >
-              Ringkasan
-            </a>
-            <a
-              href="#stats"
-              onClick={(e) => handleNavClick(e, "stats")}
-              className="hover:text-[#d6f837] transition-colors"
-            >
-              Grafik & Tren
-            </a>
-            <a
-              href="#grafik"
-              onClick={(e) => handleNavClick(e, "grafik")}
-              className="hover:text-[#d6f837] transition-colors"
-            >
-              Data Panen
-            </a>
-          </nav>
-
-          {/* Header CTA / Login Link (Leaf Diagonal Shape) */}
-          <div className="hidden sm:flex items-center gap-4">
-            <Link
-              href="/admin"
-              className="btn-neon text-xs font-bold uppercase tracking-wider py-2 px-5"
-            >
-              <Users className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Login</span>
-              <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
-            </Link>
-          </div>
-
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
-          >
-            {mobileMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
-          </button>
-        </div>
-
-        {mobileMenuOpen && (
-          <div className="md:hidden max-w-7xl mx-auto mt-2 bg-[#132417]/95 backdrop-blur-xl border border-white/15 rounded-2xl p-6 space-y-4 shadow-2xl animate-in slide-in-from-top-2 pointer-events-auto">
-            <nav className="flex flex-col gap-4 text-sm font-bold tracking-wider text-white/90 uppercase">
-              <a
-                href="#hero"
-                onClick={(e) => handleNavClick(e, "hero")}
-                className="text-[#d6f837]"
-              >
-                Beranda
-              </a>
-              <a
-                href="#overview"
-                onClick={(e) => handleNavClick(e, "overview")}
-              >
-                Ringkasan
-              </a>
-              <a href="#stats" onClick={(e) => handleNavClick(e, "stats")}>
-                Grafik & Tren
-              </a>
-              <a href="#grafik" onClick={(e) => handleNavClick(e, "grafik")}>
-                Data Panen
-              </a>
-            </nav>
-            <div className="pt-2">
-              <Link
-                href="/admin"
-                className="btn-neon w-full text-xs font-bold uppercase tracking-wider py-3 justify-center"
-              >
-                <Users className="w-4 h-4 stroke-[2.5]" />
-                <span>Login</span>
-                <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
-              </Link>
-            </div>
-          </div>
-        )}
-      </header>
+      <Navbar />
 
       <section
         id="hero"

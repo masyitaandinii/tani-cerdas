@@ -106,7 +106,7 @@ export function ChatbotSection() {
                   TaniBot AI Assistant
                 </h4>
                 <p className="text-[11px] text-[#d6f837] font-semibold">
-                  Online • Siap Membantu
+                  Online
                 </p>
               </div>
             </div>

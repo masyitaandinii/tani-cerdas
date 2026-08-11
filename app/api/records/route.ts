@@ -33,7 +33,7 @@ export async function GET(request: Request) {
         const skip = limit > 0 ? (page - 1) * limit : 0;
         
         const [records, total] = await Promise.all([
-            limit > 0 ? TengkulakRecord.find(query).skip(skip).limit(limit).lean() : TengkulakRecord.find(query).lean(),
+            limit > 0 ? TengkulakRecord.find(query).sort({ timestamp: -1 }).skip(skip).limit(limit).lean() : TengkulakRecord.find(query).sort({ timestamp: -1 }).lean(),
             TengkulakRecord.countDocuments(query)
         ]);
 

@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from 'react';
+import Link from 'next/link';
 import { TengkulakRecord } from '../lib/data';
+import { useSession } from 'next-auth/react';
 import { ArrowUpRight } from 'lucide-react';
 
 interface Props {
@@ -9,6 +11,7 @@ interface Props {
 }
 
 export function DusunDistributionCard({ selectedKuartal = "ALL" }: Props) {
+    const { data: session } = useSession();
     const [records, setRecords] = useState<TengkulakRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -121,10 +124,12 @@ export function DusunDistributionCard({ selectedKuartal = "ALL" }: Props) {
                 </div>
             </div>
 
-            <button className="btn-forest w-full mt-8 py-3.5 text-xs uppercase tracking-wider justify-center">
-                <span>Lihat Detail Lengkap</span>
-                <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
-            </button>
+            {session?.user && (session.user.role === "admin" || session.user.role === "superadmin") && (
+                <Link href="/admin" className="btn-forest w-full mt-8 py-3.5 text-xs uppercase tracking-wider justify-center">
+                    <span>Lihat Detail Lengkap</span>
+                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                </Link>
+            )}
         </div>
     );
 }
