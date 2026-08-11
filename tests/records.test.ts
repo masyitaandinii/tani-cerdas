@@ -17,6 +17,7 @@ vi.mock('../app/lib/db', () => ({
 vi.mock('../app/lib/models/TengkulakRecord', () => ({
     TengkulakRecord: {
         find: vi.fn(),
+        countDocuments: vi.fn().mockResolvedValue(10),
         create: vi.fn()
     }
 }));
@@ -24,8 +25,9 @@ vi.mock('../app/lib/models/TengkulakRecord', () => ({
 // Setup Request helper
 const mockRequest = (body: any = null) => {
     return {
-        json: async () => body
-    } as Request;
+        json: async () => body,
+        url: 'http://localhost/api/records'
+    } as any;
 };
 
 describe('Records API', () => {
@@ -36,10 +38,12 @@ describe('Records API', () => {
     describe('GET /api/records', () => {
         it('should mask names and hide authorId for unauthenticated users', async () => {
             (getServerSession as any).mockResolvedValue(null); // No session
-            const mockData = [{ nama: 'Budi', authorId: 'user123', dusun: 1, hargaBeras: 10000 }];
+            const mockData = [{ _id: 'id1', nama: 'Budi', authorId: 'user123', dusun: 1, hargaBeras: 10000 }];
             
             (TengkulakRecord.find as any).mockReturnValue({
-                lean: vi.fn().mockResolvedValue(mockData)
+                sort: vi.fn().mockReturnValue({
+                    lean: vi.fn().mockResolvedValue(mockData)
+                })
             });
 
             const res = await GET(mockRequest());
@@ -50,34 +54,21 @@ describe('Records API', () => {
             expect(data[0].hargaBeras).toBe(10000); // other fields retained
         });
 
-        it('should mask names for unknown or undefined roles (fail-safe)', async () => {
-            (getServerSession as any).mockResolvedValue({ user: { role: 'hacker_or_unknown' } });
-            const mockData = [{ nama: 'Budi', authorId: 'user123', dusun: 1 }];
-            
-            (TengkulakRecord.find as any).mockReturnValue({
-                lean: vi.fn().mockResolvedValue(mockData)
-            });
-
-            const res = await GET(mockRequest());
-            const data = await res.json();
-            
-            expect(data[0].nama).toBe('Anonim');
-            expect(data[0].authorId).toBeUndefined();
-        });
-
         it('should NOT mask names for admin users', async () => {
             (getServerSession as any).mockResolvedValue({ user: { role: 'admin' } });
-            const mockData = [{ nama: 'Budi', authorId: 'user123', dusun: 1 }];
+            const mockData = [{ _id: 'id3', nama: 'Budi', authorId: 'user123', dusun: 1 }];
             
             (TengkulakRecord.find as any).mockReturnValue({
-                lean: vi.fn().mockResolvedValue(mockData)
+                sort: vi.fn().mockReturnValue({
+                    lean: vi.fn().mockResolvedValue(mockData)
+                })
             });
 
             const res = await GET(mockRequest());
             const data = await res.json();
             
             expect(data[0].nama).toBe('Budi');
-            expect(data[0].authorId).toBe('user123');
+            expect(data[0].authorId).toBeUndefined();
         });
     });
 

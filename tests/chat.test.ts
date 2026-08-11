@@ -1,14 +1,31 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { POST } from '../app/api/chat/route';
 
 const mockRequest = (body: any) => {
+    const headers = new Map();
+    headers.set('x-forwarded-for', '127.0.0.1');
     return {
-        json: async () => body
-    } as Request;
+        json: async () => body,
+        headers
+    } as any;
 };
 
 describe('Chat API', () => {
+    beforeAll(() => {
+        process.env.AI_API_KEY = 'test-key';
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({
+                candidates: [{ content: { parts: [{ text: 'Backend Terhubung' }] } }]
+            })
+        } as any);
+    });
+
+    afterAll(() => {
+        vi.restoreAllMocks();
+    });
+
     it('should reject off-topic questions without calling AI', async () => {
         const req = mockRequest({ message: 'Cara merakit PC gaming' });
         const res = await POST(req);
@@ -17,7 +34,7 @@ describe('Chat API', () => {
         const data = await res.json();
         
         expect(data.role).toBe('ai');
-        expect(data.content).toBe('Maaf, TaniBot hanya bisa menjawab seputar harga dan pertanian.');
+        expect(data.content).toBe('Maaf, TaniBot hanya bisa menjawab pertanyaan spesifik seputar pertanian dan harga. Harap gunakan kalimat yang relevan.');
     });
 
     it('should allow valid agricultural questions', async () => {
@@ -28,7 +45,7 @@ describe('Chat API', () => {
         const data = await res.json();
         
         expect(data.role).toBe('ai');
-        expect(data.content).toContain('Backend Terhubung');
+        expect(data.content).toBe('Backend Terhubung');
     });
 
     it('should handle missing message', async () => {

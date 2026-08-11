@@ -37,11 +37,16 @@ export async function GET(request: Request) {
             TengkulakRecord.countDocuments(query)
         ]);
 
-        const formattedRecords = records.map(r => {
-            // Strip authorId to avoid exposing internal DB user IDs, but expose the real 'nama' to everyone
+        // Proteksi PII: Sembunyikan nama asli jika diakses tanpa session (publik)
+        const session = await getServerSession(authOptions);
+        const isAuthenticated = !!(session && session.user);
+
+        const formattedRecords = records.map((r) => {
+            // Strip authorId to avoid exposing internal DB user IDs
             // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-            const { authorId, _id, ...rest } = r as any;
-            return { ...rest, id: _id.toString() };
+            const { authorId, _id, nama, ...rest } = r as any;
+            const safeNama = isAuthenticated ? nama : 'Anonim';
+            return { ...rest, nama: safeNama, id: _id.toString() };
         });
 
         if (limit > 0) {
