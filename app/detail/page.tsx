@@ -67,6 +67,36 @@ export default function InputDashboardPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [records, setRecords] = useState<TengkulakRecord[]>([]);
 
+    const [addSuggestions, setAddSuggestions] = useState<string[]>([]);
+    const [editSuggestions, setEditSuggestions] = useState<string[]>([]);
+    const [showAddSuggestions, setShowAddSuggestions] = useState(false);
+    const [showEditSuggestions, setShowEditSuggestions] = useState(false);
+
+    const searchTengkulak = async (query: string, isEdit: boolean, dusun: number, controller?: AbortController) => {
+        if (!query.trim()) {
+            if (isEdit) setEditSuggestions([]);
+            else setAddSuggestions([]);
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/tengkulak/search?q=${encodeURIComponent(query)}&dusun=${dusun}`, {
+                signal: controller?.signal
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const names = data.map((u: any) => u.name);
+                    if (isEdit) setEditSuggestions(names);
+                    else setAddSuggestions(names);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to search tengkulak names:", error);
+        }
+    };
+
     // Edit & Delete Record States
     const [editingRecord, setEditingRecord] = useState<TengkulakRecord | null>(null);
     const [editFormData, setEditFormData] = useState({
@@ -79,6 +109,28 @@ export default function InputDashboardPage() {
     });
     const [isUpdatingRecord, setIsUpdatingRecord] = useState(false);
     const [deletingRecord, setDeletingRecord] = useState<TengkulakRecord | null>(null);
+
+    useEffect(() => {
+        if (showAddSuggestions) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => searchTengkulak(formData.nama, false, formData.dusun, controller), 300);
+            return () => {
+                clearTimeout(timeoutId);
+                controller.abort();
+            };
+        }
+    }, [formData.nama, formData.dusun, showAddSuggestions]);
+
+    useEffect(() => {
+        if (showEditSuggestions) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => searchTengkulak(editFormData.nama, true, editFormData.dusun, controller), 300);
+            return () => {
+                clearTimeout(timeoutId);
+                controller.abort();
+            };
+        }
+    }, [editFormData.nama, editFormData.dusun, showEditSuggestions]);
 
     // Superadmin Dusun Filter State
     const [selectedDusunFilter, setSelectedDusunFilter] = useState<number | "ALL">("ALL");
@@ -651,7 +703,7 @@ export default function InputDashboardPage() {
                                 </button>
                             </div>
                             <form onSubmit={handleEditSubmit} className="space-y-4">
-                                <div>
+                                <div className="relative">
                                     <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
                                         Nama Tengkulak
                                     </label>
@@ -659,11 +711,30 @@ export default function InputDashboardPage() {
                                         type="text"
                                         required
                                         value={editFormData.nama}
-                                        onChange={(e) =>
-                                            setEditFormData({ ...editFormData, nama: e.target.value })
-                                        }
+                                        onFocus={() => setShowEditSuggestions(true)}
+                                        onBlur={() => setTimeout(() => setShowEditSuggestions(false), 200)}
+                                        onChange={(e) => {
+                                            setEditFormData({ ...editFormData, nama: e.target.value });
+                                            setShowEditSuggestions(true);
+                                        }}
                                         className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                     />
+                                    {showEditSuggestions && editSuggestions.length > 0 && (
+                                        <ul className="absolute z-10 w-full mt-1 bg-white border border-[#e2e0d4] rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                                            {editSuggestions.map((name, idx) => (
+                                                <li 
+                                                    key={idx} 
+                                                    onMouseDown={() => {
+                                                        setEditFormData({ ...editFormData, nama: name });
+                                                        setShowEditSuggestions(false);
+                                                    }}
+                                                    className="px-4 py-2 text-sm text-[#121e14] cursor-pointer hover:bg-[#f4f3ea] transition-colors"
+                                                >
+                                                    {name}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
                                 </div>
 
                                 {activeUser.role === "superadmin" && (
@@ -920,7 +991,7 @@ export default function InputDashboardPage() {
                                         </p>
                                     </div>
                                     <form onSubmit={handleAdminSubmit} className="p-6 space-y-4">
-                                        <div>
+                                        <div className="relative">
                                             <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
                                                 Nama Tengkulak
                                             </label>
@@ -928,12 +999,31 @@ export default function InputDashboardPage() {
                                                 type="text"
                                                 required
                                                 value={formData.nama}
-                                                onChange={(e) =>
-                                                    setFormData({ ...formData, nama: e.target.value })
-                                                }
+                                                onFocus={() => setShowAddSuggestions(true)}
+                                                onBlur={() => setTimeout(() => setShowAddSuggestions(false), 200)}
+                                                onChange={(e) => {
+                                                    setFormData({ ...formData, nama: e.target.value });
+                                                    setShowAddSuggestions(true);
+                                                }}
                                                 className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                                 placeholder="Masukkan nama lengkap"
                                             />
+                                            {showAddSuggestions && addSuggestions.length > 0 && (
+                                                <ul className="absolute z-10 w-full mt-1 bg-white border border-[#e2e0d4] rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                                                    {addSuggestions.map((name, idx) => (
+                                                        <li 
+                                                            key={idx} 
+                                                            onMouseDown={() => {
+                                                                setFormData({ ...formData, nama: name });
+                                                                setShowAddSuggestions(false);
+                                                            }}
+                                                            className="px-4 py-2 text-sm text-[#121e14] cursor-pointer hover:bg-[#f4f3ea] transition-colors"
+                                                        >
+                                                            {name}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
                                         </div>
 
                                         {activeUser.role === "superadmin" && (

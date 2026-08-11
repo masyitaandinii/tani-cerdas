@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../lib/auth';
 import connectToDatabase from '../../lib/db';
 import { TengkulakRecord } from '../../lib/models/TengkulakRecord';
+import { User } from '../../lib/models/User';
+import bcrypt from 'bcrypt';
 import { z } from 'zod';
 import { ROLES, DUSUN_LIMITS } from '../../lib/constants';
 
@@ -22,7 +24,9 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         
         const page = parseInt(searchParams.get('page') || '1', 10);
-        const limit = parseInt(searchParams.get('limit') || '0', 10); // 0 means no pagination
+        const requestedLimit = parseInt(searchParams.get('limit') || '0', 10);
+        const limit = requestedLimit === 0 ? 1000 : Math.min(requestedLimit, 1000);
+        const isPaginated = requestedLimit !== 0;
         const dusun = searchParams.get('dusun');
 
         const query: Record<string, unknown> = {};
@@ -49,7 +53,7 @@ export async function GET(request: Request) {
             return { ...rest, nama: safeNama, id: _id.toString() };
         });
 
-        if (limit > 0) {
+        if (isPaginated) {
             return NextResponse.json({
                 data: formattedRecords,
                 meta: {
@@ -106,6 +110,20 @@ export async function POST(request: Request) {
             ...data,
             authorId: session.user.id
         });
+
+        // Auto-create user for the tengkulak if not exists
+        const generatedUsername = data.nama.toLowerCase().replace(/\s+/g, '');
+        const existingUser = await User.findOne({ username: generatedUsername });
+        if (!existingUser) {
+            const hashedPassword = await bcrypt.hash('tani123', 10);
+            await User.create({
+                username: generatedUsername,
+                password: hashedPassword,
+                name: data.nama,
+                role: ROLES.USER,
+                assignedDusun: data.dusun
+            });
+        }
 
         const recordObj = newRecord.toObject();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

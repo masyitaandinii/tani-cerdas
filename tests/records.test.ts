@@ -22,6 +22,13 @@ vi.mock('../app/lib/models/TengkulakRecord', () => ({
     }
 }));
 
+vi.mock('../app/lib/models/User', () => ({
+    User: {
+        findOne: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockResolvedValue({ _id: 'newuser123' })
+    }
+}));
+
 // Setup Request helper
 const mockRequest = (body: any = null) => {
     return {
@@ -42,6 +49,11 @@ describe('Records API', () => {
             
             (TengkulakRecord.find as any).mockReturnValue({
                 sort: vi.fn().mockReturnValue({
+                    skip: vi.fn().mockReturnValue({
+                        limit: vi.fn().mockReturnValue({
+                            lean: vi.fn().mockResolvedValue(mockData)
+                        })
+                    }),
                     lean: vi.fn().mockResolvedValue(mockData)
                 })
             });
@@ -60,6 +72,11 @@ describe('Records API', () => {
             
             (TengkulakRecord.find as any).mockReturnValue({
                 sort: vi.fn().mockReturnValue({
+                    skip: vi.fn().mockReturnValue({
+                        limit: vi.fn().mockReturnValue({
+                            lean: vi.fn().mockResolvedValue(mockData)
+                        })
+                    }),
                     lean: vi.fn().mockResolvedValue(mockData)
                 })
             });
