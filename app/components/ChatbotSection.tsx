@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { Bot, Send, X } from "lucide-react";
 import { useAppStore } from "../lib/store";

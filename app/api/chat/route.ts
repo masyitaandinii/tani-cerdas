@@ -7,6 +7,15 @@ const ALLOWED_KEYWORDS = [
     "beli", "sawah", "pertanian", "irigasi"
 ];
 
+const IP_RATE_LIMIT = new Map<string, { count: number; timestamp: number }>();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 5;
+
+const INJECTION_BLOCKLIST = [
+    "abaikan", "ignore", "system", "instruksi", "instruction",
+    "prompt", "bypass", "jailbreak", "lupakan", "forget", "berperan", "bertindak sebagai"
+];
+
 export async function POST(request: Request) {
     try {
         const body = await request.json();
@@ -21,13 +30,34 @@ export async function POST(request: Request) {
 
         const lowerMessage = message.toLowerCase();
 
+        const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+        const now = Date.now();
+        const userRateInfo = IP_RATE_LIMIT.get(ip);
+        
+        if (userRateInfo) {
+            if (now - userRateInfo.timestamp < RATE_LIMIT_WINDOW) {
+                if (userRateInfo.count >= MAX_REQUESTS_PER_WINDOW) {
+                    return NextResponse.json({
+                        role: 'ai',
+                        content: 'Maaf, Anda mengirim terlalu banyak pesan. Silakan tunggu sebentar sebelum bertanya lagi.'
+                    }, { status: 429 });
+                }
+                userRateInfo.count++;
+            } else {
+                IP_RATE_LIMIT.set(ip, { count: 1, timestamp: now });
+            }
+        } else {
+            IP_RATE_LIMIT.set(ip, { count: 1, timestamp: now });
+        }
+
         // Pre-validation Guard
         const isAllowed = ALLOWED_KEYWORDS.some(keyword => lowerMessage.includes(keyword));
+        const isInjection = INJECTION_BLOCKLIST.some(keyword => lowerMessage.includes(keyword));
 
-        if (!isAllowed) {
+        if (!isAllowed || isInjection) {
             return NextResponse.json({
                 role: 'ai',
-                content: 'Maaf, TaniBot hanya bisa menjawab seputar harga dan pertanian.'
+                content: 'Maaf, TaniBot hanya bisa menjawab pertanyaan spesifik seputar pertanian dan harga. Harap gunakan kalimat yang relevan.'
             });
         }
 

@@ -1,7 +1,7 @@
 export const ROLES = {
     ADMIN: 'admin',
     SUPERADMIN: 'superadmin',
-    USER: 'user',
+    USER: 'tengkulak',
 } as const;
 
 export const DUSUN_LIMITS = {
