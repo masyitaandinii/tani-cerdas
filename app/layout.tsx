@@ -11,6 +11,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://tani-cerdas-xi.vercel.app"),
   title: {
     default: "TaniCerdas | Wujudkan Pertanian Desa Cerdas & Berkelanjutan",
     template: "%s | TaniCerdas"
@@ -53,7 +54,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="id"
       className={`${plusJakartaSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
