@@ -27,6 +27,7 @@ import {
 } from "recharts";
 import { useSession, signIn } from "next-auth/react";
 import { Navbar } from "../components/Navbar";
+import { DUSUN_NAMES } from "../lib/constants";
 
 export function AdminClient() {
     const { data: session, status } = useSession();
@@ -279,13 +280,13 @@ export function AdminClient() {
                         <div className="flex items-center gap-2 text-xs font-semibold text-[#d6f837]">
                             <Link href="/" className="hover:underline">Beranda</Link>
                             <ChevronRight className="w-3.5 h-3.5" />
-                            <span>Detail Dusun {selectedDusun}</span>
+                            <span>Detail Dusun {DUSUN_NAMES[selectedDusun] || selectedDusun}</span>
                         </div>
                         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-                            Laporan Detail Data Panen Dusun {selectedDusun}
+                            Laporan Detail Data Panen Dusun {DUSUN_NAMES[selectedDusun] || `Dusun ${selectedDusun}`}
                         </h1>
                         <p className="text-white/70 text-sm max-w-xl">
-                            Informasi perbandingan harga beras, harga gabah, dan akumulasi hasil panen secara mendalam untuk Dusun {selectedDusun}.
+                            Informasi perbandingan harga beras, harga gabah, dan akumulasi hasil panen secara mendalam untuk {DUSUN_NAMES[selectedDusun] || `Dusun ${selectedDusun}`}.
                         </p>
                     </div>
 
@@ -348,7 +349,7 @@ export function AdminClient() {
                     <div className="bg-[#15291b] p-6 rounded-[1.75rem] text-white shadow-md border border-white/10 flex flex-col justify-between md:col-span-2">
                         <div>
                             <span className="badge-pill-dark text-[10px] mb-3">
-                                <span className="badge-bullet"></span> TOTAL PANEN DUSUN {selectedDusun}
+                                <span className="badge-bullet"></span> TOTAL PANEN DUSUN {String(DUSUN_NAMES[selectedDusun] || selectedDusun).toUpperCase()}
                             </span>
                             <h3 className="text-3xl sm:text-4xl font-extrabold text-[#d6f837] mt-2">
                                 {(stats.totalPanen / 1000).toLocaleString("id-ID", {
@@ -360,7 +361,7 @@ export function AdminClient() {
                                 </span>
                             </h3>
                             <p className="text-white/70 text-xs mt-2">
-                                Berdasarkan {stats.count} catatan input panen di Dusun {selectedDusun}.
+                                Berdasarkan {stats.count} catatan input panen di Dusun {DUSUN_NAMES[selectedDusun] || selectedDusun}.
                             </p>
                         </div>
                     </div>
@@ -369,7 +370,7 @@ export function AdminClient() {
                 <div className="bg-white p-4 rounded-2xl border border-[#e2e0d4] shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between">
                     <div className="flex items-center gap-2 text-xs font-bold text-[#121e14]/80">
                         <Calendar className="w-4 h-4 text-[#15291b]" />
-                        <span>Filter Periode Kuartal Dusun {selectedDusun}:</span>
+                        <span>Filter Periode Kuartal Dusun {DUSUN_NAMES[selectedDusun] || selectedDusun}:</span>
                     </div>
 
                     <div className="flex items-center gap-2 flex-wrap">
@@ -406,7 +407,7 @@ export function AdminClient() {
                                 Pergerakan Harga Beras & Gabah
                             </h3>
                             <p className="text-xs text-[#121e14]/60 mt-1">
-                                Perbandingan rata-rata harga di Dusun {selectedDusun} tiap periode.
+                                Perbandingan rata-rata harga di Dusun {DUSUN_NAMES[selectedDusun] || selectedDusun} tiap periode.
                             </p>
                         </div>
                         <div className="h-72 w-full">
@@ -467,7 +468,7 @@ export function AdminClient() {
                                 Total Hasil Panen per Periode (Kg)
                             </h3>
                             <p className="text-xs text-[#121e14]/60 mt-1">
-                                Volume produksi panen Dusun {selectedDusun} tiap periode.
+                                Volume produksi panen Dusun {DUSUN_NAMES[selectedDusun] || selectedDusun} tiap periode.
                             </p>
                         </div>
                         <div className="h-72 w-full">
@@ -509,10 +510,10 @@ export function AdminClient() {
                     <div className="p-6 border-b border-[#e2e0d4] flex justify-between items-center bg-[#f4f3ea]">
                         <div>
                             <h3 className="font-bold text-base text-[#121e14]">
-                                Rincian Tabel Input Data - Dusun {selectedDusun} (Terbaru)
+                                Rincian Tabel Input Data - Dusun {DUSUN_NAMES[selectedDusun] || selectedDusun} (Terbaru)
                             </h3>
                             <p className="text-xs text-[#121e14]/60">
-                                Seluruh riwayat transaksi setoran panen di Dusun {selectedDusun} (paling baru di atas).
+                                Seluruh riwayat transaksi setoran panen di Dusun {DUSUN_NAMES[selectedDusun] || selectedDusun} (paling baru di atas).
                             </p>
                         </div>
                         <div className="bg-[#15291b] text-[#d6f837] px-4 py-1 rounded-full text-xs font-bold">
@@ -528,7 +529,7 @@ export function AdminClient() {
                         <div className="p-12 text-center text-red-500 font-semibold">{error}</div>
                     ) : dusunRecords.length === 0 ? (
                         <div className="p-12 text-center text-[#121e14]/50 text-sm">
-                            Tidak ada data untuk Dusun {selectedDusun} pada filter ini.
+                            Tidak ada data untuk Dusun {DUSUN_NAMES[selectedDusun] || selectedDusun} pada filter ini.
                         </div>
                     ) : (
                         <div className="overflow-x-auto">

@@ -12,6 +12,7 @@ import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "../components/Navbar";
+import { DUSUN_NAMES } from "../lib/constants";
 import {
     BarChart,
     Bar,
@@ -114,7 +115,7 @@ export default function TengkulakPage() {
                                 Halo, {activeUser.name}
                             </h1>
                             <p className="text-[#121e14]/70 text-xs font-semibold mt-0.5">
-                                Dusun {activeUser.assignedDusun} • Tengkulak 
+                                Dusun {DUSUN_NAMES[activeUser.assignedDusun || 1] || activeUser.assignedDusun} • Tengkulak 
                             </p>
                         </div>
                     </div>
@@ -151,7 +152,7 @@ export default function TengkulakPage() {
                                 Ringkasan Setoran & Kemitraan
                             </h3>
                             <p className="text-xs text-[#121e14]/70 leading-relaxed">
-                                Anda tercatat memiliki <strong>{myRecords.length} transaksi setoran</strong> di Dusun {activeUser.assignedDusun}. Jika ada ketidaksesuaian data, hubungi Admin Dusun setempat.
+                                Anda tercatat memiliki <strong>{myRecords.length} transaksi setoran</strong> di Dusun {DUSUN_NAMES[activeUser.assignedDusun || 1] || activeUser.assignedDusun}. Jika ada ketidaksesuaian data, hubungi Admin Dusun setempat.
                             </p>
                         </div>
                         <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#e2e0d4]">
@@ -161,7 +162,7 @@ export default function TengkulakPage() {
                             </div>
                             <div>
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#121e14]/50">Dusun Mitra</span>
-                                <p className="text-base font-extrabold text-[#15291b]">Dusun {activeUser.assignedDusun}</p>
+                                <p className="text-base font-extrabold text-[#15291b]">Dusun {DUSUN_NAMES[activeUser.assignedDusun || 1] || activeUser.assignedDusun}</p>
                             </div>
                         </div>
                     </div>

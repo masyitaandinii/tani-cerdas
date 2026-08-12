@@ -5,6 +5,7 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { TengkulakRecord } from '../lib/data';
+import { DUSUN_NAMES } from '../lib/constants';
 
 interface DashboardChartsProps {
     filterLevel: "Desa" | "Dusun";
@@ -50,7 +51,7 @@ export function DashboardCharts({ filterLevel, selectedDusun, selectedKuartal }:
             // Aggregate data per Dusun
             const aggRecord: Record<number, { dName: string; count: number; totalBeras: number; totalGabah: number }> = {};
             [1, 2, 3, 4].forEach(d => {
-                aggRecord[d] = { dName: `Dusun ${d}`, count: 0, totalBeras: 0, totalGabah: 0 };
+                aggRecord[d] = { dName: `Dusun ${DUSUN_NAMES[d] || d}`, count: 0, totalBeras: 0, totalGabah: 0 };
             });
 
             filtered.forEach(r => {
@@ -71,7 +72,7 @@ export function DashboardCharts({ filterLevel, selectedDusun, selectedKuartal }:
             // Filter level is Dusun -> show inner data by Tengkulak instead
             const dusunRecords = filtered.filter(r => r.dusun === selectedDusun);
             return dusunRecords.map((r, i) => ({
-                name: r.nama === 'Anonim' ? `Anonim ${i + 1}` : r.nama,
+                name: r.nama,
                 "Harga Beras": r.hargaBeras,
                 "Harga Gabah": r.hargaGabah,
             }));
@@ -86,7 +87,7 @@ export function DashboardCharts({ filterLevel, selectedDusun, selectedKuartal }:
                     PERBANDINGAN HARGA
                 </span>
                 <h3 className="text-2xl font-bold text-[#121e14]">
-                    Statistik Harga {filterLevel === "Desa" ? "Seluruh Dusun" : `di Dusun ${selectedDusun}`}
+                    Statistik Harga {filterLevel === "Desa" ? "Seluruh Dusun" : `di Dusun ${DUSUN_NAMES[selectedDusun] || selectedDusun}`}
                 </h3>
                 <p className="text-[#121e14]/60 text-xs sm:text-sm mt-1">
                     {filterLevel === "Desa"

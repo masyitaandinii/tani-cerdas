@@ -14,6 +14,7 @@ import {
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "../../components/Navbar";
+import { DUSUN_NAMES } from "../../lib/constants";
 import {
     BarChart,
     Bar,
@@ -464,7 +465,7 @@ export default function InputDataPage() {
                                     Halo, {activeUser.name}
                                 </h1>
                                 <p className="text-[#121e14]/70 text-xs font-semibold mt-0.5">
-                                    Dusun {activeUser.assignedDusun} • Tengkulak Partner
+                                    Dusun {DUSUN_NAMES[activeUser.assignedDusun || 1]} • Tengkulak Partner
                                 </p>
                             </div>
                         </div>
@@ -501,7 +502,7 @@ export default function InputDataPage() {
                                     Ringkasan Setoran & Kemitraan
                                 </h3>
                                 <p className="text-xs text-[#121e14]/70 leading-relaxed">
-                                    Anda tercatat memiliki <strong>{myRecords.length} transaksi setoran</strong> di Dusun {activeUser.assignedDusun}. Jika ada ketidaksesuaian data, hubungi Admin Dusun setempat.
+                                    Anda tercatat memiliki <strong>{myRecords.length} transaksi setoran</strong> di Dusun {DUSUN_NAMES[activeUser.assignedDusun || 1]}. Jika ada ketidaksesuaian data, hubungi Admin Dusun setempat.
                                 </p>
                             </div>
                             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#e2e0d4]">
@@ -511,7 +512,7 @@ export default function InputDataPage() {
                                 </div>
                                 <div>
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#121e14]/50">Dusun Mitra</span>
-                                    <p className="text-base font-extrabold text-[#15291b]">Dusun {activeUser.assignedDusun}</p>
+                                    <p className="text-base font-extrabold text-[#15291b]">Dusun {DUSUN_NAMES[activeUser.assignedDusun || 1]}</p>
                                 </div>
                             </div>
                         </div>
@@ -709,10 +710,10 @@ export default function InputDataPage() {
                                             }
                                             className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                         >
-                                            <option value={1}>Dusun 1</option>
-                                            <option value={2}>Dusun 2</option>
-                                            <option value={3}>Dusun 3</option>
-                                            <option value={4}>Dusun 4</option>
+                                            <option value={1}>Dusun {DUSUN_NAMES[1]}</option>
+                                            <option value={2}>Dusun {DUSUN_NAMES[2]}</option>
+                                            <option value={3}>Dusun {DUSUN_NAMES[3]}</option>
+                                            <option value={4}>Dusun {DUSUN_NAMES[4]}</option>
                                         </select>
                                     </div>
                                 )}
@@ -891,7 +892,7 @@ export default function InputDataPage() {
                         <p className="text-[#121e14]/70 text-xs font-semibold mt-0.5">
                             {activeUser.role === "superadmin"
                                 ? "Akses Pengelolaan Seluruh Dusun & Akses Pengguna"
-                                : `Anda mengelola data untuk Dusun ${activeUser.assignedDusun}.`}
+                                : `Anda mengelola data untuk Dusun ${DUSUN_NAMES[activeUser.assignedDusun || 1] || activeUser.assignedDusun}.`}
                         </p>
                     </div>
                     <button
@@ -998,10 +999,10 @@ export default function InputDataPage() {
                                                     }
                                                     className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                                 >
-                                                    <option value={1}>Dusun 1</option>
-                                                    <option value={2}>Dusun 2</option>
-                                                    <option value={3}>Dusun 3</option>
-                                                    <option value={4}>Dusun 4</option>
+                                                    <option value={1}>Dusun {DUSUN_NAMES[1]}</option>
+                                                    <option value={2}>Dusun {DUSUN_NAMES[2]}</option>
+                                                    <option value={3}>Dusun {DUSUN_NAMES[3]}</option>
+                                                    <option value={4}>Dusun {DUSUN_NAMES[4]}</option>
                                                 </select>
                                             </div>
                                         )}
@@ -1186,10 +1187,10 @@ export default function InputDataPage() {
                                                     }
                                                     className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                                 >
-                                                    <option value={1}>Dusun 1</option>
-                                                    <option value={2}>Dusun 2</option>
-                                                    <option value={3}>Dusun 3</option>
-                                                    <option value={4}>Dusun 4</option>
+                                                    <option value={1}>Dusun {DUSUN_NAMES[1]}</option>
+                                                    <option value={2}>Dusun {DUSUN_NAMES[2]}</option>
+                                                    <option value={3}>Dusun {DUSUN_NAMES[3]}</option>
+                                                    <option value={4}>Dusun {DUSUN_NAMES[4]}</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -1218,7 +1219,7 @@ export default function InputDataPage() {
                                         <h3 className="font-bold text-base text-[#121e14]">
                                             {activeUser.role === "superadmin"
                                                 ? "Data Panen Seluruh Dusun (Terbaru)"
-                                                : `Data Tengkulak Dusun ${activeUser.assignedDusun} (Terbaru)`}
+                                                : `Data Tengkulak Dusun ${DUSUN_NAMES[activeUser.assignedDusun || 1] || activeUser.assignedDusun} (Terbaru)`}
                                         </h3>
                                         <p className="text-xs text-[#121e14]/60">
                                             Daftar riwayat yang terdaftar dalam sistem (diurutkan paling baru di atas).
@@ -1242,10 +1243,10 @@ export default function InputDataPage() {
                                                     className="px-3 py-1.5 rounded-xl border border-[#e2e0d4] bg-white text-xs font-bold text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                                 >
                                                     <option value="ALL">Semua Dusun</option>
-                                                    <option value={1}>Dusun 1</option>
-                                                    <option value={2}>Dusun 2</option>
-                                                    <option value={3}>Dusun 3</option>
-                                                    <option value={4}>Dusun 4</option>
+                                                    <option value={1}>Dusun {DUSUN_NAMES[1]}</option>
+                                                    <option value={2}>Dusun {DUSUN_NAMES[2]}</option>
+                                                    <option value={3}>Dusun {DUSUN_NAMES[3]}</option>
+                                                    <option value={4}>Dusun {DUSUN_NAMES[4]}</option>
                                                 </select>
                                             </div>
                                         )}
@@ -1285,7 +1286,7 @@ export default function InputDataPage() {
                                                                 {r.nama}
                                                             </div>
                                                             <div className="text-[11px] text-[#121e14]/60 mt-0.5 flex items-center gap-2">
-                                                                <span>Dusun {r.dusun}</span>
+                                                                <span>Dusun {DUSUN_NAMES[r.dusun] || r.dusun}</span>
                                                                 <span>•</span>
                                                                 <span>
                                                                     {new Date(r.timestamp).toLocaleDateString("id-ID")}
@@ -1401,7 +1402,7 @@ export default function InputDataPage() {
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4 text-[#121e14]">
-                                                            {u.assignedDusun ? `Dusun ${u.assignedDusun}` : "-"}
+                                                            {u.assignedDusun ? `Dusun ${DUSUN_NAMES[u.assignedDusun] || u.assignedDusun}` : "-"}
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
                                                             {u.role !== "superadmin" ? (
