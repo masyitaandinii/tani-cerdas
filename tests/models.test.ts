@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { User } from '../app/lib/models/User';
 import { TengkulakRecord } from '../app/lib/models/TengkulakRecord';
+import { PriceBenchmark } from '../app/lib/models/PriceBenchmark';
 
 describe('Mongoose Models Validation', () => {
     it('should validate User model properly', () => {
@@ -23,6 +24,18 @@ describe('Mongoose Models Validation', () => {
         const err2 = admin.validateSync();
         expect(err2).toBeUndefined();
 
+        // Valid tengkulak with whatsapp
+        const tengkulak = new User({
+            username: 'tengkulak_budi',
+            name: 'Budi Santoso',
+            role: 'tengkulak',
+            assignedDusun: 2,
+            whatsapp: '081234567890'
+        });
+        const errWhatsapp = tengkulak.validateSync();
+        expect(errWhatsapp).toBeUndefined();
+        expect(tengkulak.whatsapp).toBe('081234567890');
+
         // Invalid role
         const invalidUser = new User({
             username: 'hacker',
@@ -34,17 +47,17 @@ describe('Mongoose Models Validation', () => {
         expect(err3?.errors['role']).toBeDefined();
     });
 
-    it('should validate TengkulakRecord model properly', () => {
+    it('should validate TengkulakRecord model properly with default totalPanen 0', () => {
         const validRecord = new TengkulakRecord({
             nama: 'Budi',
             dusun: 1,
             hargaBeras: 12000,
             hargaGabah: 6000,
-            kuartal: 'Q1',
-            totalPanen: 1500
+            kuartal: 'Q1'
         });
         const err1 = validRecord.validateSync();
         expect(err1).toBeUndefined();
+        expect(validRecord.totalPanen).toBe(0);
 
         const invalidRecord = new TengkulakRecord({
             nama: 'Ani',
@@ -58,5 +71,17 @@ describe('Mongoose Models Validation', () => {
         expect(err2).toBeDefined();
         expect(err2?.errors['dusun']).toBeDefined();
         expect(err2?.errors['kuartal']).toBeDefined();
+    });
+
+    it('should validate PriceBenchmark model properly', () => {
+        const benchmark = new PriceBenchmark({
+            beras: { target: 13500, min: 12500, max: 14900 },
+            gabah: { target: 6500, min: 6000, max: 7500 },
+            updatedBy: 'Admin Dusun 1'
+        });
+        const err = benchmark.validateSync();
+        expect(err).toBeUndefined();
+        expect(benchmark.beras.target).toBe(13500);
+        expect(benchmark.gabah.target).toBe(6500);
     });
 });

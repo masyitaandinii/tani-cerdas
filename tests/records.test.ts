@@ -29,6 +29,19 @@ vi.mock('../app/lib/models/User', () => ({
     }
 }));
 
+vi.mock('../app/lib/models/PriceBenchmark', () => ({
+    PriceBenchmark: {
+        findOne: vi.fn().mockReturnValue({
+            sort: vi.fn().mockReturnValue({
+                lean: vi.fn().mockResolvedValue({
+                    beras: { target: 13500, min: 12500, max: 14900 },
+                    gabah: { target: 6500, min: 6000, max: 7500 }
+                })
+            })
+        })
+    }
+}));
+
 // Setup Request helper
 const mockRequest = (body: any = null) => {
     return {
@@ -43,7 +56,7 @@ describe('Records API', () => {
     });
 
     describe('GET /api/records', () => {
-        it('should mask names and hide authorId for unauthenticated users', async () => {
+        it('should return tengkulak names and hide authorId for unauthenticated users', async () => {
             (getServerSession as any).mockResolvedValue(null); // No session
             const mockData = [{ _id: 'id1', nama: 'Budi', authorId: 'user123', dusun: 1, hargaBeras: 10000 }];
             
@@ -61,7 +74,7 @@ describe('Records API', () => {
             const res = await GET(mockRequest());
             const data = await res.json();
             
-            expect(data[0].nama).toBe('Anonim');
+            expect(data[0].nama).toBe('Budi');
             expect(data[0].authorId).toBeUndefined();
             expect(data[0].hargaBeras).toBe(10000); // other fields retained
         });
@@ -130,7 +143,8 @@ describe('Records API', () => {
             
             expect(TengkulakRecord.create).toHaveBeenCalledWith(expect.objectContaining({
                 dusun: 1, // forced to 1
-                authorId: 'admin1'
+                authorId: 'admin1',
+                totalPanen: 1000
             }));
         });
         
@@ -152,8 +166,57 @@ describe('Records API', () => {
             
             expect(TengkulakRecord.create).toHaveBeenCalledWith(expect.objectContaining({
                 dusun: 3, // retains 3
-                authorId: 'super1'
+                authorId: 'super1',
+                totalPanen: 1000
             }));
+        });
+
+        it('should allow tengkulak role to post and force totalPanen = 0 and auto-fill verified name/dusun', async () => {
+            (getServerSession as any).mockResolvedValue({
+                user: { id: 'tengkulak1', name: 'Pak Haji Ahmad', role: 'tengkulak', assignedDusun: 2 }
+            });
+            (TengkulakRecord.create as any).mockResolvedValue({ toObject: () => ({ _id: 'rec999' }) });
+
+            const req = mockRequest({
+                nama: 'Custom Name Attempt',
+                dusun: 4, // Attempt different dusun
+                hargaBeras: 13000,
+                hargaGabah: 6500,
+                kuartal: 'Q2'
+            });
+
+            const res = await POST(req);
+            expect(res.status).toBe(201);
+
+            expect(TengkulakRecord.create).toHaveBeenCalledWith(expect.objectContaining({
+                nama: 'Pak Haji Ahmad',
+                dusun: 2,
+                hargaBeras: 13000,
+                hargaGabah: 6500,
+                totalPanen: 0,
+                authorId: 'tengkulak1'
+            }));
+        });
+
+        it('should return non-blocking warning when price exceeds government benchmark', async () => {
+            (getServerSession as any).mockResolvedValue({
+                user: { id: 'tengkulak2', name: 'Tengkulak Mahal', role: 'tengkulak', assignedDusun: 1 }
+            });
+            (TengkulakRecord.create as any).mockResolvedValue({ toObject: () => ({ _id: 'recOver' }) });
+
+            const req = mockRequest({
+                nama: 'Tengkulak Mahal',
+                dusun: 1,
+                hargaBeras: 25000, // Exceeds HET 14900
+                hargaGabah: 12000, // Exceeds HPP 7500
+                kuartal: 'Q1'
+            });
+
+            const res = await POST(req);
+            expect(res.status).toBe(201);
+            const data = await res.json();
+            expect(data.warning).toBeDefined();
+            expect(data.warning).toContain('melebihi batas acuan pemerintah');
         });
     });
 });

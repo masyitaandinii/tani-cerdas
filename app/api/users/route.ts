@@ -12,7 +12,8 @@ const UserInputSchema = z.object({
     password: z.string().min(1),
     name: z.string().min(1),
     role: z.enum(['admin', 'tengkulak']),
-    assignedDusun: z.number().int().min(DUSUN_LIMITS.MIN).max(DUSUN_LIMITS.MAX)
+    assignedDusun: z.number().int().min(DUSUN_LIMITS.MIN).max(DUSUN_LIMITS.MAX),
+    whatsapp: z.string().optional()
 });
 
 export async function POST(request: Request) {
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
 
         await connectToDatabase();
 
-        const { username, password, name, role, assignedDusun } = parsed.data;
+        const { username, password, name, role, assignedDusun, whatsapp } = parsed.data;
 
         const existingUser = await User.findOne({ username });
         if (existingUser) {
@@ -60,7 +61,8 @@ export async function POST(request: Request) {
             password: hashedPassword,
             name,
             role,
-            assignedDusun
+            assignedDusun,
+            whatsapp: whatsapp || ''
         });
 
         return NextResponse.json({ message: 'User berhasil dibuat', id: newUser._id.toString() }, { status: 201 });

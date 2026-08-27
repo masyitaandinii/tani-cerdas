@@ -4,6 +4,8 @@ import { Navbar } from "./components/Navbar";
 import { StatsCards } from "./components/StatsCards";
 import { ChatbotSection } from "./components/ChatbotSection";
 import { DashboardClient } from "./components/DashboardClient";
+import { TengkulakDirectorySection } from "./components/TengkulakDirectorySection";
+import { ComplaintSection } from "./components/ComplaintSection";
 
 export default function Home() {
   return (
@@ -87,9 +89,14 @@ export default function Home() {
         </div>
 
         <DashboardClient />
+
+        <TengkulakDirectorySection />
+
+        <ComplaintSection />
       </main>
 
       <ChatbotSection />
     </div>
   );
 }
+

@@ -1,24 +1,31 @@
-- [ ] Task 1: Setup project dependencies (mongoose, next-auth, bcrypt, zod, vitest)
-  - Acceptance: `npm install` berhasil tanpa konflik. Vitest bisa dijalankan (`npm test`).
-  - Verify: Jalankan `npm test` menampilkan "No test files found".
-  - Files: `package.json`, `vitest.config.ts`
+- [x] Task 1: Create PriceBenchmark Model & Benchmark Types
+  - Acceptance: Schema `PriceBenchmark` dan TypeScript types untuk acuan harga Bapanas terdefinisi lengkap.
+  - Verify: Types dan model dapat diimpor tanpa TypeScript error.
+  - Files: `types/benchmark.ts`, `types/index.ts`, `app/lib/models/PriceBenchmark.ts`
 
-- [ ] Task 2: Slice 1 - Database, Models & Seeder
-  - Acceptance: Schema terdefinisi, seeder bisa dijalankan.
-  - Verify: Tes unit model (validasi field) pass.
-  - Files: `src/app/lib/db.ts`, `src/app/lib/models/User.ts`, `src/app/lib/models/TengkulakRecord.ts`, `scripts/seed.ts`, tes di `tests/models.test.ts`
+- [x] Task 2: Implement Benchmark API & Services
+  - Acceptance: Endpoint `GET /api/benchmarks` dan `PUT /api/benchmarks` berfungsi, service layer `benchmarkService.ts` siap.
+  - Verify: Unit test API benchmark berhasil memverifikasi GET & PUT dengan RBAC.
+  - Files: `app/api/benchmarks/route.ts`, `services/benchmarkService.ts`, `services/index.ts`
 
-- [ ] Task 3: Slice 2 - Authentication (NextAuth)
-  - Acceptance: API `/api/auth/[...nextauth]` memiliki logic Credential + callback jwt/session yang menyematkan role & assignedDusun.
-  - Verify: Unit test logic sign-in sukses & return object yang lengkap.
-  - Files: `src/app/api/auth/[...nextauth]/route.ts`, `tests/auth.test.ts`
+- [x] Task 3: Adjust Records API & Models for Tengkulak Restrictions
+  - Acceptance: Tengkulak tidak lagi mengirim `totalPanen` (default 0), admin/superadmin tetap dapat menginput `totalPanen`.
+  - Verify: `tests/records.test.ts` berhasil menguji POST oleh Tengkulak tanpa totalPanen.
+  - Files: `app/lib/models/TengkulakRecord.ts`, `app/api/records/route.ts`, `app/api/records/[id]/route.ts`
 
-- [ ] Task 4: Slice 3 - Endpoint Records (GET & POST)
-  - Acceptance: GET men-strip 'nama' jika no-session. POST menolak input zod invalid & override dusun admin.
-  - Verify: Unit tests memeriksa HTTP response status (200, 403, 400).
-  - Files: `src/app/api/records/route.ts`, `tests/records.test.ts`
+- [x] Task 4: Enable Profile Editing in API & Services
+  - Acceptance: Endpoint `PATCH /api/users/[id]` mengizinkan authenticated user (admin & tengkulak) mengedit profil miliknya.
+  - Verify: Test update profil (nama, whatsapp, password) berfungsi.
+  - Files: `app/api/users/[id]/route.ts`, `services/userService.ts`
 
-- [ ] Task 5: Slice 4 - Chatbot Pre-validation Guard
-  - Acceptance: Chatbot mem-filter query yang tidak relevan dengan pertanian.
-  - Verify: Unit test check valid vs invalid queries.
-  - Files: `src/app/api/chat/route.ts`, `tests/chatbot.test.ts`
+- [x] Task 5: Build UI Components (EditProfileModal, BenchmarkPriceManager, TengkulakDashboard update)
+  - Acceptance: Modal edit profil dapat dibuka oleh Admin & Tengkulak, form input Tengkulak hanya berisi beras & gabah, form update acuan Bapanas tersedia untuk Admin/Superadmin.
+  - Files: `components/features/users/EditProfileModal.tsx`, `components/features/benchmarks/BenchmarkPriceManager.tsx`, `components/features/tengkulak/TengkulakDashboard.tsx`, `components/layout/PageHeader.tsx`
+
+- [x] Task 6: Integrate with Detail Dashboard & Landing Page StatsCards
+  - Acceptance: `app/detail/page.tsx` memiliki tab/pengaturan Bapanas, `app/components/StatsCards.tsx` menampilkan harga rata-rata Bapanas dinamis.
+  - Files: `app/detail/page.tsx`, `app/components/StatsCards.tsx`
+
+- [x] Task 7: Comprehensive Unit Testing & Production Build
+  - Acceptance: Semua unit test di `tests/` (31 tests) lulus 100%, `npm run build` sukses tanpa error tipe atau compile.
+  - Verify: `npm test && npm run build`.
