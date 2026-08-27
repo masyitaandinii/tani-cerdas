@@ -1,120 +1,130 @@
-# Spec: Backend Tani Cerdas (Next.js API + MongoDB)
+# Spec: Industrial-Standard Project Restructuring (TaniCerdas)
 
-## Objective
-Mengintegrasikan backend API ke dalam codebase Next.js App Router yang sudah ada untuk aplikasi Pojok Tani.
-Fitur mencakup:
-1. Otentikasi Role-Based Access Control (RBAC)
-2. Input data harga gabah/beras per Dusun (dibatasi per admin dusun)
-3. Endpoint data untuk dashboard (menyediakan data mentah yang diolah oleh komponen UI *existing*)
-4. Chatbot AI dengan batasan konteks pertanian.
+## 1. Objective
+Restrukturisasi arsitektur codebase **TaniCerdas** agar memenuhi standar industri (*enterprise-grade Next.js App Router with Clean Feature-Driven Architecture*), dengan tujuan:
+1. **Mengeliminasi Duplikasi Kode Ekstrem:** Menyelesaikan duplikasi 1.599 baris kode antara `/detail` dan `/admin/input`.
+2. **Modularitas Komponen (Single Responsibility Principle):** Memecah file monolitik 1.500+ baris menjadi sub-komponen terisolasi (`RecordForm`, `RecordTable`, `UserForm`, `UserTable`, `EditRecordModal`, `EditUserModal`, `ConfirmModal`, dll.).
+3. **Sentralisasi Type Definitions (`types/`):** Menggabungkan tipe data yang tersebar (`TengkulakRecord`, `IUser`, `AppUser`, `Kuartal`, API contracts) ke dalam folder `types/` terpusat.
+4. **Service / API Layer (`services/`):** Memisahkan logika fetch API (HTTP calls, error handling, payload formatting) dari UI components ke service layer yang reusable.
+5. **Reusable Atomic UI (`components/ui/`):** Menyediakan komponen UI generik (Modal, ConfirmDialog, SuccessDialog, Badge, Form Controls).
+6. **Feature-Based Component Grouping (`components/features/`):** Mengelompokkan komponen berdasarkan domain fitur (`records/`, `users/`, `tengkulak/`, `home/`, `complaints/`).
+7. **Zero Regression:** Menjamin 100% fungsionalitas tetap berjalan normal, seluruh test suite Vitest (20+ tests) lulus, dan Next.js production build berhasil tanpa error tipe.
 
-**Non-Goals (Di luar scope versi ini):**
-- **User Management API:** Pembuatan dan modifikasi entitas `User` tidak diekspos melalui API (tidak ada `POST /api/users`). Pengelolaan akun Superadmin/Admin saat ini murni dilakukan secara manual melalui eksekusi skrip *seeder*.
-- **Edit/Delete Records (Append-Only):** Tidak disediakan endpoint `PUT/DELETE /api/records/[id]`. Sistem API desainnya adalah *append-only log* guna menjaga integritas *audit trail* data historis (menjamin harga gabah/beras lampau tidak dapat diubah sepihak). Jika terjadi kesalahan, admin wajib memasukkan rekaman input baru.
+---
 
-## Pendekatan Teknis (Trade-offs)
-- **Auth (NextAuth.js dengan Credentials Provider):** 
-  - *Alasan:* NextAuth adalah standar de-facto untuk Next.js. Menggunakan custom Credentials Provider dan JWT session sangat cocok untuk API serverless Next.js, dan tidak memerlukan manajemen session tersendiri di sisi client.
-- **Kalkulasi Data (Dashboard):**
-  - *Alasan:* Berdasarkan struktur komponen frontend existing (`DashboardCharts.tsx` dan `DusunDistributionCard.tsx`), UI menerima data secara mentah (`TengkulakRecord[]`) dan melakukan agregasi secara mandiri di sisi *client* (menggunakan `useMemo`). Oleh karena itu, backend menggunakan pendekatan **On-Read** (langsung melakukan query semua record) melalui endpoint `GET /api/records`. Data tidak seagregat yang dikira sebelumnya (karena frontend existing bergantung pada array objek mentah tersebut), tetapi query On-Read biasa ke MongoDB cukup cepat. 
-- **Pembatasan Chatbot (Pre-validation Guard):**
-  - *Alasan:* Memilih **Pre-validation Guard** secara eksplisit. Backend akan mengecek string query menggunakan daftar keyword (*exact initial list*: `["beras", "gabah", "padi", "panen", "tani", "petani", "tengkulak", "pupuk", "hama", "cuaca", "harga", "jual", "beli", "sawah", "pertanian", "irigasi"]`). Jika input tidak mengandung satupun kata kunci tersebut, backend akan me-return pesan penolakan (mis: *"Maaf, TaniBot hanya bisa menjawab seputar harga dan pertanian."*) **tanpa perlu memanggil LLM API**. Hal ini jauh lebih hemat biaya/API quota dan mencegah celah jailbreak prompt.
+## 2. Tech Stack & Conventions
+- **Framework:** Next.js 16.2 (App Router, Turbopack, React 19)
+- **Language:** TypeScript (Strict Mode)
+- **State & Data Fetching:** React Hooks + Service Layer
+- **Styling:** Tailwind CSS v3
+- **Database & ORM:** MongoDB + Mongoose
+- **Auth:** NextAuth.js (JWT Strategy)
+- **Test Runner:** Vitest
 
-## Tech Stack
-- Framework: Next.js (App Router / Route Handlers)
-- Database: MongoDB + Mongoose (memudahkan schema & instance methods)
-- Validation: Zod (Validasi *request body* sebelum masuk ke eksekusi Mongoose)
-- Security: bcrypt (Hashing password user)
-- Auth: NextAuth.js (Auth.js) dengan JWT
+---
 
-## Commands
-```bash
-Install dependencies: npm install mongoose next-auth bcrypt zod
-Dev: npm run dev
-Test: npm test
+## 3. Industrial Standard Project Layout Target
+
+```
+tani-cerdas/
+├── app/                              # Next.js App Router (Page routing & API endpoints only)
+│   ├── (auth)/                       # Auth routes
+│   │   └── admin/                    # /admin (Login Portal)
+│   │       ├── page.tsx
+│   │       ├── layout.tsx
+│   │       └── AdminClient.tsx
+│   ├── admin/input/                  # /admin/input (Redirect/Alias to /detail for zero duplication)
+│   │   └── page.tsx
+│   ├── detail/                       # /detail (Main Data & Account Management Dashboard)
+│   │   └── page.tsx                  # Clean orchestrator (~150 lines)
+│   ├── tengkulak/                    # /tengkulak (Tengkulak Self-Service Portal)
+│   │   └── page.tsx
+│   ├── api/                          # Route Handlers
+│   │   ├── auth/[...nextauth]/
+│   │   ├── records/
+│   │   ├── tengkulak/
+│   │   ├── users/
+│   │   └── chat/
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx                      # Landing page
+│
+├── components/                       # UI Component Library
+│   ├── ui/                           # Generic Reusable Atoms/Molecules
+│   │   ├── Modal.tsx                 # Base backdrop & dialog container
+│   │   ├── ConfirmModal.tsx          # Generic delete/action confirmation modal
+│   │   ├── SuccessModal.tsx          # Generic success notification modal
+│   │   └── Badge.tsx                 # Role & Status badges
+│   ├── layout/                       # App layout shells
+│   │   ├── Navbar.tsx
+│   │   └── PageHeader.tsx
+│   └── features/                     # Domain-Driven Feature Modules
+│       ├── records/                  # Harvest Records feature
+│       │   ├── RecordForm.tsx
+│       │   ├── RecordTable.tsx
+│       │   ├── EditRecordModal.tsx
+│       │   └── DusunFilterBar.tsx
+│       ├── users/                    # User & Mitra Management feature
+│       │   ├── UserForm.tsx
+│       │   ├── UserTable.tsx
+│       │   └── EditUserModal.tsx
+│       ├── tengkulak/                # Tengkulak Self-Service Portal & Public Directory
+│       │   ├── TengkulakDashboard.tsx
+│       │   └── TengkulakDirectorySection.tsx
+│       ├── complaints/               # Citizen Complaints feature
+│       │   └── ComplaintSection.tsx
+│       └── home/                     # Landing Page Widgets
+│           ├── StatsCards.tsx
+│           ├── DashboardCharts.tsx
+│           ├── DusunDistributionCard.tsx
+│           └── ChatbotSection.tsx
+│
+├── services/                         # Frontend API Services
+│   ├── recordService.ts              # CRUD API for harvest records
+│   ├── userService.ts                # CRUD API for system users & tengkulak
+│   └── tengkulakService.ts           # Public directory API
+│
+├── types/                            # Centralized TypeScript Type Definitions
+│   ├── record.ts                     # Harvest record & kuartal contracts
+│   ├── user.ts                       # User, roles, & session contracts
+│   ├── api.ts                        # API standard envelope & error responses
+│   └── index.ts                      # Barrel export
+│
+├── app/lib/                          # Backend utilities, DB, Models, & Constants
+│   ├── db.ts                         # Mongoose connection with DNS auto-configuration
+│   ├── auth.ts                       # NextAuth options & RBAC authorize logic
+│   ├── constants.ts                  # Dusun config, village info, government price benchmarks
+│   ├── data.ts                       # Types & legacy helpers
+│   └── models/                       # Mongoose schemas
+│       ├── User.ts
+│       └── TengkulakRecord.ts
+│
+└── tests/                            # Vitest Test Suites
+    ├── auth.test.ts
+    ├── records.test.ts
+    ├── models.test.ts
+    └── chat.test.ts
 ```
 
-## Project Structure
-```text
-src/
-  app/
-    api/
-      auth/[...nextauth]/route.ts  # Endpoint auth
-      records/route.ts             # Get all records & Create record
-      chat/route.ts                # AI chatbot (Pre-validation + LLM call)
-  lib/
-    db.ts                          # MongoDB connection
-    models/
-      User.ts                      # User schema
-      TengkulakRecord.ts           # Record schema
-```
+---
 
-## Data Model (Mongoose)
+## 4. Architectural Boundaries
+- **Always:**
+  - Pastikan semua tipe data di-import dari `@/types` atau file model terkait.
+  - Pisahkan logic render UI dari HTTP network requests menggunakan `services/`.
+  - Gunakan nama komponen PascalCase yang merefleksikan domain (`RecordForm`, `UserTable`).
+  - Jalankan `npm test` dan `npm run build` setelah setiap refactoring slice.
+- **Ask First:**
+  - Mengubah skema database atau menghapus endpoint API yang aktif.
+- **Never:**
+  - Menghapus fungsionalitas bisnis yang telah disepakati (RBAC dusun, WhatsApp linking, acuan HET/HPP, formulir pengaduan).
+  - Melakukan refactor tanpa verifikasi type safety.
 
-**User Model:**
-- username (String, unique)
-- password (String, hashed by bcrypt)
-- name (String)
-- role (Enum: 'superadmin', 'admin', 'user')
-- assignedDusun (Number: 1, 2, 3, 4) -> (Required jika role 'admin')
+---
 
-**TengkulakRecord Model:**
-Berdasarkan `app/lib/data.ts` existing (baris ke-3 sampai ke-12):
-```typescript
-export interface TengkulakRecord {
-    id: string;
-    nama: string;
-    dusun: number; // 1, 2, 3, or 4
-    hargaBeras: number;
-    hargaGabah: number;
-    kuartal: Kuartal; // "Q1" | "Q2" | "Q3" | "Q4"
-    timestamp: string;
-    totalPanen: number; // (Dari sini field totalPanen berasal)
-}
-```
-Field pada schema Mongoose:
-- nama (String)
-- dusun (Number: 1, 2, 3, 4) -> (Menggunakan Number 1-4 sesuai dengan frontend `lib/data.ts`)
-- hargaBeras (Number)
-- hargaGabah (Number)
-- kuartal (String, enum: 'Q1', 'Q2', 'Q3', 'Q4')
-- timestamp (Date)
-- totalPanen (Number)
-- authorId (ObjectId -> ref User)
-
-## Endpoints & RBAC
-
-1. `POST /api/auth/signin` (NextAuth) -> Public
-2. `GET /api/records` -> **All Roles (Termasuk Pengguna Publik)** (Menggunakan **Opsi A**).
-   - *Logic Akses:* Tetap 1 endpoint. Namun jika *request* datang dari unauthenticated user atau role 'user' (publik), response akan secara dinamis **men-strip field `nama` dan menghapus `authorId`**. Field `nama` akan di-mask/disamarkan menjadi string seperti `"Anonim"` agar grafik di `DashboardCharts.tsx` level Dusun tetap berjalan lancar tanpa mengekspos data pribadi tengkulak. Admin dan Superadmin akan mendapatkan data *full object*.
-3. `POST /api/records` -> **Superadmin, Admin Dusun**. 
-   - Validasi Role `admin`: Akan memaksa (override) field `dusun` pada *request body* dengan nilai `session.user.assignedDusun` sebelum simpan. Menghindari celah injeksi via API.
-   - Validasi Role `superadmin`: Bebas mengirimkan payload `dusun` (1, 2, 3, atau 4).
-   - *Validasi Request Body:* Menggunakan `zod` untuk memvalidasi tipe/shape data.
-4. `POST /api/chat` -> All Roles
-   - Pre-validation menggunakan cek keyword sebelum `fetch` ke LLM API.
-
-## Boundaries
-- **Selalu lakukan:** 
-  - Gunakan **zod** untuk memvalidasi body JSON masuk dari `Request` sebelum diserahkan ke *controller* Mongoose.
-  - Hashing raw password menggunakan **bcrypt** setiap kali membuat seed / create User baru.
-  - **Secara eksplisit lakukan mapping `role` dan `assignedDusun`** dari record *User* (di database) ke *token* melalui NextAuth `callbacks.jwt()`, dan turunkan dari *token* ke *session* melalui `callbacks.session()`. Endpoint RBAC akan lumpuh (karena `undefined`) jika mapping callback ini dilewatkan.
-  - Validasi token JWT & role `session.user` di *server-side* menggunakan fungsi helper NextAuth (seperti `getServerSession`).
-  - Override payload `dusun` (untuk role `admin`) pada method `POST /api/records`.
-- **Jangan pernah:** 
-  - Mengekspose `API_KEY` Gemini atau kredensial `MONGODB_URI` ke *client*.
-  - Mengubah tipe `dusun` menjadi String (A/B/C/D), karena di frontend existing sudah terlanjur di-set sebagai *Number* (1/2/3/4).
-
-## Success Criteria
-- [ ] Admin 1 bisa input data (Otomatis tercatat sebagai dusun 1, tidak bisa meng-inject data menjadi dusun 2).
-- [ ] Superadmin bisa input data untuk dusun manapun.
-- [ ] Dashboard menampilkan data dengan benar karena fetch ke `GET /api/records` berhasil dieksekusi read-only oleh non-authenticated public user.
-- [ ] **Validasi Opsi A (Publik)**: Request `GET /api/records` tanpa token/sesi yang valid memverifikasi kembalian field `nama: "Anonim"` dan `authorId` dipotong (undefined/hilang).
-- [ ] **Validasi Opsi A (Admin/Superadmin)**: Request `GET /api/records` dengan token JWT (login) sukses mengembalikan *full object* lengkap dengan `nama` asli tengkulak dan `authorId`.
-- [ ] **Validasi Sesi / NextAuth**: Objek `session.user` pada request terautentikasi memuat properti `role` dan `assignedDusun` dengan benar sesuai database, bukan `undefined`.
-- [ ] Zod menolak *request body* bila `hargaBeras` dimasukkan tipe data String.
-- [ ] Chatbot menolak request "Cara merakit PC" di level *Pre-validation Guard* (API tidak sampai memanggil LLM).
-
-## Open Questions
-- Daftar awal *keyword* untuk Chatbot Guard mungkin perlu di-*tuning* kembali cakupannya nanti selama masa *beta testing*.
-- (Disetujui): Membuat script *seeder* (`scripts/seed.ts`) terpisah dengan *bcrypt hashing* untuk mem-populate awal database dengan *mock data*.
+## 5. Success Criteria
+1. `app/detail/page.tsx` ter-refactor dari 1.599 baris menjadi modular (< 250 baris).
+2. Duplikasi di `app/admin/input/page.tsx` dieliminasi (menggunakan reusable component atau redirect terstandar).
+3. Folder `types/`, `services/`, `components/ui/`, dan `components/features/` terstruktur rapi.
+4. Semua 20 unit tests di Vitest lulus 100%.
+5. `npm run build` sukses tanpa warning tipe atau compile error.

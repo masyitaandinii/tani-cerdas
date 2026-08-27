@@ -6,7 +6,7 @@ import { TengkulakRecord } from '../../lib/models/TengkulakRecord';
 import { User } from '../../lib/models/User';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
-import { ROLES, DUSUN_LIMITS } from '../../lib/constants';
+import { ROLES, DUSUN_LIMITS, GOVERNMENT_PRICE_BENCHMARKS } from '../../lib/constants';
 
 const RecordSchema = z.object({
     nama: z.string().min(1),
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
         }
 
         const role = session.user.role;
-        if (role !== ROLES.ADMIN && role !== ROLES.SUPERADMIN) {
+        if (role !== ROLES.ADMIN && role !== ROLES.SUPERADMIN && role !== ROLES.USER) {
             return NextResponse.json({ error: 'Forbidden', details: null }, { status: 403 });
         }
 
@@ -95,8 +95,16 @@ export async function POST(request: Request) {
 
         const data = parsed.data;
 
-        // RBAC validation: Admin can only post to their assignedDusun
-        if (role === ROLES.ADMIN) {
+        // RBAC validation
+        if (role === ROLES.USER) {
+            // Tengkulak submissions are forced to use their verified name and assigned dusun
+            if (session.user.name) {
+                data.nama = session.user.name;
+            }
+            if (session.user.assignedDusun) {
+                data.dusun = session.user.assignedDusun;
+            }
+        } else if (role === ROLES.ADMIN) {
             if (!session.user.assignedDusun) {
                 return NextResponse.json({ error: 'Forbidden: Admin does not have an assigned dusun', details: null }, { status: 403 });
             }
@@ -111,25 +119,35 @@ export async function POST(request: Request) {
             authorId: session.user.id
         });
 
-        // Auto-create user for the tengkulak if not exists
-        const generatedUsername = data.nama.toLowerCase().replace(/\s+/g, '');
-        const existingUser = await User.findOne({ username: generatedUsername });
-        if (!existingUser) {
-            const hashedPassword = await bcrypt.hash('tani123', 10);
-            await User.create({
-                username: generatedUsername,
-                password: hashedPassword,
-                name: data.nama,
-                role: ROLES.USER,
-                assignedDusun: data.dusun
-            });
+        // Auto-create user for the tengkulak if not exists (when added by Admin/Superadmin)
+        if (role !== ROLES.USER) {
+            const generatedUsername = data.nama.toLowerCase().replace(/\s+/g, '');
+            const existingUser = await User.findOne({ username: generatedUsername });
+            if (!existingUser) {
+                const hashedPassword = await bcrypt.hash('tani123', 10);
+                await User.create({
+                    username: generatedUsername,
+                    password: hashedPassword,
+                    name: data.nama,
+                    role: ROLES.USER,
+                    assignedDusun: data.dusun
+                });
+            }
         }
+
+        const isAboveBenchmark = 
+            data.hargaBeras > GOVERNMENT_PRICE_BENCHMARKS.beras.max ||
+            data.hargaGabah > GOVERNMENT_PRICE_BENCHMARKS.gabah.max;
 
         const recordObj = newRecord.toObject();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { _id, ...restObj } = recordObj as any;
 
-        return NextResponse.json({ ...restObj, id: _id.toString() }, { status: 201 });
+        return NextResponse.json({
+            ...restObj,
+            id: _id.toString(),
+            warning: isAboveBenchmark ? 'Harga yang dimasukkan melebihi batas acuan pemerintah (HET/HPP).' : null
+        }, { status: 201 });
     } catch (error) {
         console.error('POST /api/records error:', error);
         return NextResponse.json({ error: 'Internal Server Error', details: null }, { status: 500 });

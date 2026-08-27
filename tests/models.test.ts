@@ -23,6 +23,18 @@ describe('Mongoose Models Validation', () => {
         const err2 = admin.validateSync();
         expect(err2).toBeUndefined();
 
+        // Valid tengkulak with whatsapp
+        const tengkulak = new User({
+            username: 'tengkulak_budi',
+            name: 'Budi Santoso',
+            role: 'tengkulak',
+            assignedDusun: 2,
+            whatsapp: '081234567890'
+        });
+        const errWhatsapp = tengkulak.validateSync();
+        expect(errWhatsapp).toBeUndefined();
+        expect(tengkulak.whatsapp).toBe('081234567890');
+
         // Invalid role
         const invalidUser = new User({
             username: 'hacker',

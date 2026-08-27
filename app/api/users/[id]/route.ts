@@ -10,6 +10,7 @@ import { z } from 'zod';
 const UpdateUserSchema = z.object({
     name: z.string().min(1).optional(),
     password: z.string().optional(),
+    whatsapp: z.string().optional(),
 });
 
 function hasPermission(sessionUser: any, targetUser: any) {
@@ -96,6 +97,9 @@ export async function PATCH(
 
         if (parsed.data.name) {
             user.name = parsed.data.name;
+        }
+        if (parsed.data.whatsapp !== undefined) {
+            user.whatsapp = parsed.data.whatsapp;
         }
         if (parsed.data.password && parsed.data.password.trim() !== '') {
             user.password = await bcrypt.hash(parsed.data.password, 10);

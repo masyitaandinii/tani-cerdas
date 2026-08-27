@@ -155,5 +155,54 @@ describe('Records API', () => {
                 authorId: 'super1'
             }));
         });
+
+        it('should allow tengkulak role to post and auto-fill verified name and dusun', async () => {
+            (getServerSession as any).mockResolvedValue({
+                user: { id: 'tengkulak1', name: 'Pak Haji Ahmad', role: 'tengkulak', assignedDusun: 2 }
+            });
+            (TengkulakRecord.create as any).mockResolvedValue({ toObject: () => ({ _id: 'rec999' }) });
+
+            const req = mockRequest({
+                nama: 'Custom Name Attempt',
+                dusun: 4, // Attempt different dusun
+                hargaBeras: 13000,
+                hargaGabah: 6500,
+                kuartal: 'Q2',
+                totalPanen: 2500
+            });
+
+            const res = await POST(req);
+            expect(res.status).toBe(201);
+
+            expect(TengkulakRecord.create).toHaveBeenCalledWith(expect.objectContaining({
+                nama: 'Pak Haji Ahmad',
+                dusun: 2,
+                hargaBeras: 13000,
+                hargaGabah: 6500,
+                authorId: 'tengkulak1'
+            }));
+        });
+
+        it('should return non-blocking warning when price exceeds government benchmark', async () => {
+            (getServerSession as any).mockResolvedValue({
+                user: { id: 'tengkulak2', name: 'Tengkulak Mahal', role: 'tengkulak', assignedDusun: 1 }
+            });
+            (TengkulakRecord.create as any).mockResolvedValue({ toObject: () => ({ _id: 'recOver' }) });
+
+            const req = mockRequest({
+                nama: 'Tengkulak Mahal',
+                dusun: 1,
+                hargaBeras: 25000, // Exceeds HET 14900
+                hargaGabah: 12000, // Exceeds HPP 7500
+                kuartal: 'Q1',
+                totalPanen: 1000
+            });
+
+            const res = await POST(req);
+            expect(res.status).toBe(201);
+            const data = await res.json();
+            expect(data.warning).toBeDefined();
+            expect(data.warning).toContain('melebihi batas acuan pemerintah');
+        });
     });
 });

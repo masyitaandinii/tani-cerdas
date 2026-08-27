@@ -1,24 +1,29 @@
-- [ ] Task 1: Setup project dependencies (mongoose, next-auth, bcrypt, zod, vitest)
-  - Acceptance: `npm install` berhasil tanpa konflik. Vitest bisa dijalankan (`npm test`).
-  - Verify: Jalankan `npm test` menampilkan "No test files found".
-  - Files: `package.json`, `vitest.config.ts`
+- [x] Task 1: Create Centralized Types Layer (`types/`)
+  - Acceptance: `types/record.ts`, `types/user.ts`, `types/api.ts`, `types/index.ts` dibuat dan mengekspor interface lengkap.
+  - Verify: Import types di file TypeScript tanpa compiler error.
+  - Files: `types/record.ts`, `types/user.ts`, `types/api.ts`, `types/index.ts`
 
-- [ ] Task 2: Slice 1 - Database, Models & Seeder
-  - Acceptance: Schema terdefinisi, seeder bisa dijalankan.
-  - Verify: Tes unit model (validasi field) pass.
-  - Files: `src/app/lib/db.ts`, `src/app/lib/models/User.ts`, `src/app/lib/models/TengkulakRecord.ts`, `scripts/seed.ts`, tes di `tests/models.test.ts`
+- [x] Task 2: Create Frontend API Service Layer (`services/`)
+  - Acceptance: `services/recordService.ts`, `services/userService.ts`, `services/tengkulakService.ts` mengenkapsulasi seluruh fetch logic dengan type-safe handling.
+  - Verify: Test HTTP calls menggunakan service functions.
+  - Files: `services/recordService.ts`, `services/userService.ts`, `services/tengkulakService.ts`
 
-- [ ] Task 3: Slice 2 - Authentication (NextAuth)
-  - Acceptance: API `/api/auth/[...nextauth]` memiliki logic Credential + callback jwt/session yang menyematkan role & assignedDusun.
-  - Verify: Unit test logic sign-in sukses & return object yang lengkap.
-  - Files: `src/app/api/auth/[...nextauth]/route.ts`, `tests/auth.test.ts`
+- [x] Task 3: Create Reusable UI Components (`components/ui/` & `components/layout/`)
+  - Acceptance: `Modal.tsx`, `ConfirmModal.tsx`, `SuccessModal.tsx`, `Badge.tsx`, `PageHeader.tsx` dibuat dengan accessibility dan styling konsisten.
+  - Verify: Komponen me-render modal dialog & badge dengan benar.
+  - Files: `components/ui/Modal.tsx`, `components/ui/ConfirmModal.tsx`, `components/ui/SuccessModal.tsx`, `components/ui/Badge.tsx`
 
-- [ ] Task 4: Slice 3 - Endpoint Records (GET & POST)
-  - Acceptance: GET men-strip 'nama' jika no-session. POST menolak input zod invalid & override dusun admin.
-  - Verify: Unit tests memeriksa HTTP response status (200, 403, 400).
-  - Files: `src/app/api/records/route.ts`, `tests/records.test.ts`
+- [x] Task 4: Modularize Feature Components (`components/features/`)
+  - Acceptance: Komponen Records (`RecordForm`, `RecordTable`, `EditRecordModal`, `DusunFilterBar`), Users (`UserForm`, `UserTable`, `EditUserModal`), dan Tengkulak (`TengkulakDashboard`, `TengkulakDirectorySection`) terisolasi rapi.
+  - Verify: Komponen dapat di-mount dan dites secara independen.
+  - Files: `components/features/records/*`, `components/features/users/*`, `components/features/tengkulak/*`
 
-- [ ] Task 5: Slice 4 - Chatbot Pre-validation Guard
-  - Acceptance: Chatbot mem-filter query yang tidak relevan dengan pertanian.
-  - Verify: Unit test check valid vs invalid queries.
-  - Files: `src/app/api/chat/route.ts`, `tests/chatbot.test.ts`
+- [x] Task 5: Refactor Dashboard & Eliminate Duplicate Routes
+  - Acceptance: `app/detail/page.tsx` menjadi orchestrator bersih (< 380 baris). `app/admin/input/page.tsx` mengeliminasi duplikasi 1.599 baris dengan me-redirect atau re-export.
+  - Verify: Mengunjungi `/detail` dan `/admin/input` berfungsi identik dan sempurna.
+  - Files: `app/detail/page.tsx`, `app/admin/input/page.tsx`, `app/tengkulak/page.tsx`
+
+- [x] Task 6: Final Verification & Type Safety Check
+  - Acceptance: `npm test` lulus 100% (20/20 test cases), `npm run build` sukses tanpa warning atau error.
+  - Verify: `npm test && npm run build`.
+

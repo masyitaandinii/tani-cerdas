@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { TengkulakRecord } from "../lib/data";
+import { GOVERNMENT_PRICE_BENCHMARKS } from "../lib/constants";
 import {
   LineChart,
   Line,
@@ -136,6 +137,12 @@ export function StatsCards() {
                 /kg
               </span>
             </h3>
+            <div className="mt-3 pt-3 border-t border-[#e2e0d4]/80 flex items-center justify-between text-[11px] font-semibold text-[#121e14]/70">
+              <span>HET Pemerintah:</span>
+              <span className="text-[#15291b] font-bold">
+                Rp {GOVERNMENT_PRICE_BENCHMARKS.beras.min.toLocaleString("id-ID")} - {GOVERNMENT_PRICE_BENCHMARKS.beras.max.toLocaleString("id-ID")}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -156,6 +163,12 @@ export function StatsCards() {
                 /kg
               </span>
             </h3>
+            <div className="mt-3 pt-3 border-t border-[#e2e0d4]/80 flex items-center justify-between text-[11px] font-semibold text-[#121e14]/70">
+              <span>HPP Pemerintah:</span>
+              <span className="text-amber-800 font-bold">
+                Rp {GOVERNMENT_PRICE_BENCHMARKS.gabah.min.toLocaleString("id-ID")} - {GOVERNMENT_PRICE_BENCHMARKS.gabah.max.toLocaleString("id-ID")}
+              </span>
+            </div>
           </div>
         </div>
 

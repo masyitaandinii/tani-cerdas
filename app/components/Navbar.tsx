@@ -112,6 +112,20 @@ export function Navbar() {
                     >
                         Data Panen
                     </a>
+                    <a
+                        href="/#tengkulak-list"
+                        onClick={(e) => handleNavClick(e, "tengkulak-list")}
+                        className="transition-colors hover:text-[#d6f837]"
+                    >
+                        Mitra
+                    </a>
+                    <a
+                        href="/#pengaduan"
+                        onClick={(e) => handleNavClick(e, "pengaduan")}
+                        className="transition-colors hover:text-[#d6f837]"
+                    >
+                        Pengaduan
+                    </a>
                     {session?.user && (session.user.role === "admin" || session.user.role === "superadmin") && (
                         <Link
                             href="/admin"
@@ -130,7 +144,7 @@ export function Navbar() {
                                 pathname === "/tengkulak" ? "text-[#d6f837]" : ""
                             }`}
                         >
-                            Riwayat
+                            Portal Tengkulak
                         </Link>
                     )}
 
@@ -205,6 +219,18 @@ export function Navbar() {
                         >
                             Data Panen
                         </a>
+                        <a
+                            href="/#tengkulak-list"
+                            onClick={(e) => handleNavClick(e, "tengkulak-list")}
+                        >
+                            Mitra Tengkulak
+                        </a>
+                        <a
+                            href="/#pengaduan"
+                            onClick={(e) => handleNavClick(e, "pengaduan")}
+                        >
+                            Pengaduan Warga
+                        </a>
                         {session?.user && (session.user.role === "admin" || session.user.role === "superadmin") && (
                             <Link
                                 href="/admin"
@@ -218,7 +244,7 @@ export function Navbar() {
                                 href="/tengkulak"
                                 className={pathname === "/tengkulak" ? "text-[#d6f837]" : ""}
                             >
-                               Riwayat
+                               Portal Tengkulak
                             </Link>
                         )}
 

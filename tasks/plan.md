@@ -1,27 +1,47 @@
-# Technical Implementation Plan
+# Implementation Plan: Industrial-Standard Project Restructuring
 
-1. **Setup & Dependencies**
-   - Install backend dependencies (`mongoose`, `next-auth`, `bcrypt`, `zod`).
-   - Install test dependencies (`vitest`, `@types/bcrypt`, dll).
-   - Configure Vitest for TDD.
+## Phase 1: Centralized Types & Service Layer
+1. Buat folder `types/`:
+   - `types/record.ts`: Type definition untuk data panen, kuartal, dan payload form.
+   - `types/user.ts`: Type definition untuk akun, peran (`UserRole`), session, dan form pengguna.
+   - `types/api.ts`: Kontrak response API envelope.
+   - `types/index.ts`: Barrel export untuk memudahkan import (`@/types`).
+2. Buat folder `services/`:
+   - `services/recordService.ts`: Abstraksi fetch/create/update/delete untuk records.
+   - `services/userService.ts`: Abstraksi fetch/create/update/delete untuk users.
+   - `services/tengkulakService.ts`: Abstraksi fetch data tengkulak publik.
 
-2. **Slice 1: Database & Data Models**
-   - Buat MongoDB Connection Utility (`lib/db.ts`).
-   - Buat Mongoose Schema untuk `User` dan `TengkulakRecord`.
-   - Buat skrip Seeder (`scripts/seed.ts`) untuk inisialisasi Superadmin dan Admin.
-   - *Test:* Unit test memvalidasi struktur Mongoose Schema (menggunakan in-memory atau mock db).
+## Phase 2: Generic Reusable UI Components
+1. Buat folder `components/ui/`:
+   - `components/ui/Modal.tsx`: Base modal dialog wrapper (ESC handling, backdrop blur, animation).
+   - `components/ui/ConfirmModal.tsx`: Dialog konfirmasi aksi (hapus record/user).
+   - `components/ui/SuccessModal.tsx`: Dialog feedback sukses seragam.
+   - `components/ui/Badge.tsx`: Badge visual untuk peran, status kuartal, dan warning pemerintah.
+2. Buat `components/layout/`:
+   - `components/layout/Navbar.tsx` & `PageHeader.tsx`.
 
-3. **Slice 2: Auth & RBAC Middleware**
-   - Setup konfigurasi NextAuth (`app/api/auth/[...nextauth]/route.ts`).
-   - Gunakan CredentialsProvider, komparasi bcrypt, dan injeksi callback `jwt` & `session`.
-   - *Test:* Unit test memanggil logic credentials authorization.
+## Phase 3: Domain-Driven Feature Modularization
+1. Feature Records (`components/features/records/`):
+   - `RecordForm.tsx`: Form input data panen + auto-suggest nama mitra.
+   - `RecordTable.tsx`: Tabel data panen responsive + aksi edit/hapus.
+   - `EditRecordModal.tsx`: Modal edit data panen.
+   - `DusunFilterBar.tsx`: Filter tab dusun untuk superadmin/admin.
+2. Feature Users (`components/features/users/`):
+   - `UserForm.tsx`: Form registrasi akun pengguna (terisolasi superadmin vs admin dusun).
+   - `UserTable.tsx`: Tabel daftar pengguna + nomor WhatsApp + aksi edit/hapus.
+   - `EditUserModal.tsx`: Modal edit akun pengguna & nomor WhatsApp.
+3. Feature Tengkulak (`components/features/tengkulak/`):
+   - `TengkulakDashboard.tsx`: Panel view khusus peran tengkulak (ringkasan setoran, chart kuartal, & self-input).
+   - `TengkulakDirectorySection.tsx`: Komponen landing page direktori tengkulak.
+4. Feature Complaints & Home (`components/features/complaints/`, `components/features/home/`):
+   - Migrasi dan modularisasi komponen beranda.
 
-4. **Slice 3: Endpoint Records (`/api/records`)**
-   - Implementasi GET (Public) dengan stripping field `nama` dan penghapusan `authorId` jika session tidak ada/role public.
-   - Implementasi POST (Admin/Superadmin) dengan Zod validation dan override `dusun`.
-   - *Test:* Unit test menggunakan request/response mock memastikan stripping data berjalan, override role berhasil, dan schema tertolak jika invalid.
+## Phase 4: Clean Page Orchestration & Route De-duplication
+1. Refactor `app/detail/page.tsx` menjadi halaman ramping (~150-200 baris) yang hanya mengorkestrasi state & sub-komponen feature.
+2. Selesaikan duplikasi di `app/admin/input/page.tsx` dengan re-exporting `InputDataPage` dari `@/app/detail/page` atau `redirect('/detail')`.
+3. Refactor `app/tengkulak/page.tsx` & `app/page.tsx`.
 
-5. **Slice 4: Endpoint Chatbot (`/api/chat`)**
-   - Implementasi Pre-validation Guard dengan Keyword check.
-   - Integrasi ke LLM API (dummy atau Google Gemini) jika lolos guard.
-   - *Test:* Unit test memvalidasi jika input "cara merakit PC" otomatis gagal tanpa error, dan input "harga gabah" berhasil lolos guard.
+## Phase 5: Verification & Quality Assurance
+1. Jalankan unit test `npm test` (memastikan 20/20 test cases lulus).
+2. Jalankan `npm run build` (memastikan Next.js compile & Turbopack 100% lulus tanpa type error).
+3. Verifikasi runtime API dan alur navigasi.

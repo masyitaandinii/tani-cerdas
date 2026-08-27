@@ -6,6 +6,8 @@ export interface IUser extends Document {
     name: string;
     role: 'superadmin' | 'admin' | 'tengkulak' | 'user';
     assignedDusun?: number;
+    phone?: string;
+    whatsapp?: string;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -13,7 +15,9 @@ const UserSchema = new Schema<IUser>({
     password: { type: String },
     name: { type: String, required: true },
     role: { type: String, enum: ['superadmin', 'admin', 'tengkulak', 'user'], required: true },
-    assignedDusun: { type: Number, enum: [1, 2, 3, 4] }
+    assignedDusun: { type: Number, enum: [1, 2, 3, 4] },
+    phone: { type: String },
+    whatsapp: { type: String }
 }, { timestamps: true });
 
 export const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);

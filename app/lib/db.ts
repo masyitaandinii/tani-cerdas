@@ -1,4 +1,14 @@
 import mongoose from 'mongoose';
+import dns from 'node:dns';
+
+// Fix queryTxt ETIMEOUT on Windows / local ISP DNS for MongoDB Atlas SRV connection
+if (typeof dns?.setServers === 'function') {
+    try {
+        dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1', '1.0.0.1']);
+    } catch {
+        // Ignore if environment prevents modifying DNS servers
+    }
+}
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -28,11 +38,13 @@ async function connectToDatabase() {
     if (!cached.promise) {
         const opts = {
             bufferCommands: false,
+            serverSelectionTimeoutMS: 10000,
         };
 
         cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
             return mongoose;
         }).catch((error) => {
+            console.error('MongoDB connection error:', error);
             cached.promise = null;
             throw error;
         });
