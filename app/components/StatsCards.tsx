@@ -6,9 +6,11 @@ import {
   CircleDollarSign,
   Tractor,
   ArrowUpRight,
+  ShieldCheck,
 } from "lucide-react";
-import { TengkulakRecord } from "../lib/data";
+import { TengkulakRecord, PriceBenchmark } from "@/types";
 import { GOVERNMENT_PRICE_BENCHMARKS } from "../lib/constants";
+import { fetchBenchmarkPrices } from "@/services/benchmarkService";
 import {
   LineChart,
   Line,
@@ -24,27 +26,37 @@ import {
 
 export function StatsCards() {
   const [records, setRecords] = useState<TengkulakRecord[]>([]);
+  const [benchmarks, setBenchmarks] = useState<PriceBenchmark>({
+    beras: GOVERNMENT_PRICE_BENCHMARKS.beras,
+    gabah: GOVERNMENT_PRICE_BENCHMARKS.gabah,
+    updatedBy: "Bapanas",
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchRecords() {
+    async function loadData() {
       try {
-        const res = await fetch("/api/records");
-        if (res.ok) {
-          const data = await res.json();
-          setRecords(data);
-        } else {
-          setError("Gagal memuat data statistik.");
+        const [recRes, bmData] = await Promise.all([
+          fetch("/api/records"),
+          fetchBenchmarkPrices(),
+        ]);
+
+        if (recRes.ok) {
+          const recData = await recRes.json();
+          setRecords(Array.isArray(recData) ? recData : recData.data || []);
         }
-      } catch (error) {
-        console.error("Failed to fetch records:", error);
-        setError("Terjadi kesalahan koneksi.");
+        if (bmData) {
+          setBenchmarks(bmData);
+        }
+      } catch (err) {
+        console.error("Failed to fetch stats data:", err);
+        setError("Terjadi kesalahan memuat data.");
       } finally {
         setLoading(false);
       }
     }
-    fetchRecords();
+    loadData();
   }, []);
 
   const currentYear = new Date().getFullYear();
@@ -69,11 +81,11 @@ export function StatsCards() {
       const avgB =
         count > 0
           ? kRecords.reduce((acc, r) => acc + r.hargaBeras, 0) / count
-          : 0;
+          : benchmarks.beras?.target || 13500;
       const avgG =
         count > 0
           ? kRecords.reduce((acc, r) => acc + r.hargaGabah, 0) / count
-          : 0;
+          : benchmarks.gabah?.target || 6500;
       const totalP =
         count > 0
           ? kRecords.reduce((acc, r) => acc + (r.totalPanen || 0), 0)
@@ -86,31 +98,29 @@ export function StatsCards() {
         "Total Panen (Kg)": totalP,
       };
     });
-  }, [recordsThisYear]);
+  }, [recordsThisYear, benchmarks]);
 
-  if (error)
+  if (error && records.length === 0) {
     return (
-      <div className="text-red-500 bg-red-50 p-4 rounded-xl border border-red-100 text-sm font-semibold">
+      <div className="text-red-500 bg-red-50 p-4 rounded-xl border border-red-100 text-sm font-semibold mb-8">
         {error}
-      </div>
-    );
-  if (loading)
-    return (
-      <div className="animate-pulse h-32 bg-gray-200 rounded-[1.75rem] w-full mb-8"></div>
-    );
-  if (recordsThisYear.length === 0) {
-    return (
-      <div className="bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm mb-8 text-center text-[#121e14]/60 text-sm font-medium">
-        Belum ada data untuk tahun {currentYear}.
       </div>
     );
   }
 
-  const totalBeras = recordsThisYear.reduce((acc, r) => acc + r.hargaBeras, 0);
-  const avgBeras = totalBeras / recordsThisYear.length;
+  if (loading) {
+    return (
+      <div className="animate-pulse h-48 bg-gray-200 rounded-[1.75rem] w-full mb-8"></div>
+    );
+  }
 
-  const totalGabah = recordsThisYear.reduce((acc, r) => acc + r.hargaGabah, 0);
-  const avgGabah = totalGabah / recordsThisYear.length;
+  const bapanasBerasAvg = benchmarks.beras?.target || GOVERNMENT_PRICE_BENCHMARKS.beras.target;
+  const bapanasBerasMin = benchmarks.beras?.min || GOVERNMENT_PRICE_BENCHMARKS.beras.min;
+  const bapanasBerasMax = benchmarks.beras?.max || GOVERNMENT_PRICE_BENCHMARKS.beras.max;
+
+  const bapanasGabahAvg = benchmarks.gabah?.target || GOVERNMENT_PRICE_BENCHMARKS.gabah.target;
+  const bapanasGabahMin = benchmarks.gabah?.min || GOVERNMENT_PRICE_BENCHMARKS.gabah.min;
+  const bapanasGabahMax = benchmarks.gabah?.max || GOVERNMENT_PRICE_BENCHMARKS.gabah.max;
 
   const totalPanenSum = recordsThisYear.reduce(
     (acc, r) => acc + (r.totalPanen || 0),
@@ -119,59 +129,69 @@ export function StatsCards() {
 
   return (
     <div className="flex flex-col gap-8 w-full mb-8">
+      {/* 3 Main Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm flex flex-col justify-between h-full col-span-1">
+        {/* Harga Rata-rata Beras (Bapanas) */}
+        <div className="bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm flex flex-col justify-between h-full col-span-1 relative overflow-hidden group">
           <div>
             <div className="flex justify-between items-start mb-6">
               <div className="w-12 h-12 bg-[#15291b]/10 rounded-2xl flex items-center justify-center text-[#15291b]">
                 <CircleDollarSign className="w-6 h-6 stroke-[2.2]" />
               </div>
+              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold bg-[#15291b] text-[#d6f837] px-2.5 py-1 rounded-full uppercase tracking-wider">
+                <ShieldCheck className="w-3 h-3" />
+                Bapanas
+              </span>
             </div>
             <p className="text-xs font-bold uppercase tracking-wider text-[#121e14]/60 mb-1">
               Harga Rata-rata Beras
             </p>
             <h3 className="text-3xl font-extrabold text-[#121e14] flex items-baseline gap-1">
-              Rp{" "}
-              {avgBeras.toLocaleString("id-ID", { maximumFractionDigits: 0 })}{" "}
+              Rp {bapanasBerasAvg.toLocaleString("id-ID")}{" "}
               <span className="text-xs font-semibold text-[#121e14]/50">
                 /kg
               </span>
             </h3>
             <div className="mt-3 pt-3 border-t border-[#e2e0d4]/80 flex items-center justify-between text-[11px] font-semibold text-[#121e14]/70">
-              <span>HET Pemerintah:</span>
+              <span>HET Acuan Pemerintah:</span>
               <span className="text-[#15291b] font-bold">
-                Rp {GOVERNMENT_PRICE_BENCHMARKS.beras.min.toLocaleString("id-ID")} - {GOVERNMENT_PRICE_BENCHMARKS.beras.max.toLocaleString("id-ID")}
+                Rp {bapanasBerasMin.toLocaleString("id-ID")} - {bapanasBerasMax.toLocaleString("id-ID")}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm flex flex-col justify-between h-full col-span-1">
+        {/* Harga Rata-rata Gabah (Bapanas) */}
+        <div className="bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm flex flex-col justify-between h-full col-span-1 relative overflow-hidden group">
           <div>
             <div className="flex justify-between items-start mb-6">
               <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-700">
                 <Tractor className="w-6 h-6 stroke-[2.2]" />
               </div>
+              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold bg-amber-800 text-[#fef08a] px-2.5 py-1 rounded-full uppercase tracking-wider">
+                <ShieldCheck className="w-3 h-3" />
+                Bapanas
+              </span>
             </div>
             <p className="text-xs font-bold uppercase tracking-wider text-[#121e14]/60 mb-1">
               Harga Rata-rata Gabah
             </p>
             <h3 className="text-3xl font-extrabold text-[#121e14] flex items-baseline gap-1">
-              Rp{" "}
-              {avgGabah.toLocaleString("id-ID", { maximumFractionDigits: 0 })}{" "}
+              Rp {bapanasGabahAvg.toLocaleString("id-ID")}{" "}
               <span className="text-xs font-semibold text-[#121e14]/50">
                 /kg
               </span>
             </h3>
             <div className="mt-3 pt-3 border-t border-[#e2e0d4]/80 flex items-center justify-between text-[11px] font-semibold text-[#121e14]/70">
-              <span>HPP Pemerintah:</span>
+              <span>HPP Acuan Pemerintah:</span>
               <span className="text-amber-800 font-bold">
-                Rp {GOVERNMENT_PRICE_BENCHMARKS.gabah.min.toLocaleString("id-ID")} - {GOVERNMENT_PRICE_BENCHMARKS.gabah.max.toLocaleString("id-ID")}
+                Rp {bapanasGabahMin.toLocaleString("id-ID")} - {bapanasGabahMax.toLocaleString("id-ID")}
               </span>
             </div>
           </div>
         </div>
 
+        {/* Total Panen Desa (Kg / Ton) */}
         <div className="bg-[#15291b] p-6 sm:p-8 rounded-[1.75rem] border border-white/10 shadow-lg flex flex-col justify-between h-full lg:col-span-2 relative overflow-hidden text-white">
           <div className="absolute -bottom-6 -right-6 w-36 h-36 bg-[#d6f837]/10 rounded-full blur-2xl pointer-events-none" />
 
@@ -186,7 +206,6 @@ export function StatsCards() {
                 className="w-8 h-8 rounded-full bg-white/10 hover:bg-[#d6f837] hover:text-[#121e14] transition-all flex items-center justify-center text-[#d6f837]"
                 title="Lihat Detail Statistik"
               >
-                
                 <ArrowUpRight className="w-5 h-5 stroke-[2.5]" />
               </Link>
             </div>
@@ -202,22 +221,16 @@ export function StatsCards() {
               </h3>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-3">
                 <p className="text-white/70 text-xs sm:text-sm font-medium flex-1">
-                  Estimasi akumulasi hasil panen gabah & beras dari seluruh dusun
-                  pada periode berjalan.
+                  Estimasi akumulasi hasil panen gabah & beras seluruh dusun
+                  yang diinputkan resmi oleh Pengelola / Admin Desa.
                 </p>
-                {/* <Link
-                  href="/detail"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-[#d6f837] text-white hover:text-[#121e14] transition-all text-xs font-bold shrink-0 self-start sm:self-auto"
-                >
-                  <span>Lihat Statistik</span>
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                </Link> */}
               </div>
             </div>
           </div>
         </div>
       </div>
 
+      {/* 2 Charts: Tren Harga & Total Panen */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
         <div className="bg-white p-6 sm:p-8 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm flex flex-col relative overflow-hidden lg:col-span-2">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
