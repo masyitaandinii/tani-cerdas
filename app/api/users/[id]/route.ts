@@ -15,8 +15,9 @@ const UpdateUserSchema = z.object({
 
 function hasPermission(sessionUser: any, targetUser: any) {
     if (sessionUser.role === ROLES.SUPERADMIN) return true;
+    // User can edit their own profile
+    if (sessionUser.id === targetUser.id?.toString() || sessionUser.id === targetUser._id?.toString()) return true;
     if (sessionUser.role === ROLES.ADMIN) {
-        if (sessionUser.id === targetUser.id?.toString()) return true;
         // Admin can only manage non-admins and non-superadmins in their assigned dusun
         return targetUser.role !== ROLES.SUPERADMIN && 
                targetUser.role !== ROLES.ADMIN && 
@@ -73,10 +74,6 @@ export async function PATCH(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        if (session.user.role !== ROLES.SUPERADMIN && session.user.role !== ROLES.ADMIN) {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
-
         const body = await request.json();
         const parsed = UpdateUserSchema.safeParse(body);
 
@@ -107,7 +104,17 @@ export async function PATCH(
 
         await user.save();
 
-        return NextResponse.json({ message: 'User updated successfully' });
+        return NextResponse.json({
+            message: 'User updated successfully',
+            data: {
+                id: user._id.toString(),
+                name: user.name,
+                username: user.username,
+                role: user.role,
+                assignedDusun: user.assignedDusun,
+                whatsapp: user.whatsapp
+            }
+        });
     } catch (error) {
         console.error('PATCH /api/users/[id] error:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

@@ -65,6 +65,13 @@ export async function updateUser(
     }
 }
 
+export async function updateProfile(
+    userId: string,
+    payload: { name: string; whatsapp?: string; password?: string }
+): Promise<{ success: boolean; data?: AppUser; error?: string }> {
+    return updateUser(userId, payload);
+}
+
 export async function deleteUser(id: string): Promise<{ success: boolean; error?: string }> {
     try {
         const res = await fetch('/api/users/' + id, {
