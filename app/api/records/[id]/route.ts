@@ -12,8 +12,15 @@ const RecordSchema = z.object({
     hargaBeras: z.number().positive().optional(),
     hargaGabah: z.number().positive().optional(),
     kuartal: z.enum(['Q1', 'Q2', 'Q3', 'Q4']).optional(),
-    totalPanen: z.number().positive().optional()
+    totalPanen: z.number().nonnegative().optional()
 });
+
+export async function PATCH(
+    request: Request,
+    context: { params: Promise<{ id: string }> }
+) {
+    return PUT(request, context);
+}
 
 export async function PUT(
     request: Request,

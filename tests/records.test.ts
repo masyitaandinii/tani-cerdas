@@ -29,6 +29,19 @@ vi.mock('../app/lib/models/User', () => ({
     }
 }));
 
+vi.mock('../app/lib/models/PriceBenchmark', () => ({
+    PriceBenchmark: {
+        findOne: vi.fn().mockReturnValue({
+            sort: vi.fn().mockReturnValue({
+                lean: vi.fn().mockResolvedValue({
+                    beras: { target: 13500, min: 12500, max: 14900 },
+                    gabah: { target: 6500, min: 6000, max: 7500 }
+                })
+            })
+        })
+    }
+}));
+
 // Setup Request helper
 const mockRequest = (body: any = null) => {
     return {
@@ -130,7 +143,8 @@ describe('Records API', () => {
             
             expect(TengkulakRecord.create).toHaveBeenCalledWith(expect.objectContaining({
                 dusun: 1, // forced to 1
-                authorId: 'admin1'
+                authorId: 'admin1',
+                totalPanen: 1000
             }));
         });
         
@@ -152,11 +166,12 @@ describe('Records API', () => {
             
             expect(TengkulakRecord.create).toHaveBeenCalledWith(expect.objectContaining({
                 dusun: 3, // retains 3
-                authorId: 'super1'
+                authorId: 'super1',
+                totalPanen: 1000
             }));
         });
 
-        it('should allow tengkulak role to post and auto-fill verified name and dusun', async () => {
+        it('should allow tengkulak role to post and force totalPanen = 0 and auto-fill verified name/dusun', async () => {
             (getServerSession as any).mockResolvedValue({
                 user: { id: 'tengkulak1', name: 'Pak Haji Ahmad', role: 'tengkulak', assignedDusun: 2 }
             });
@@ -167,8 +182,7 @@ describe('Records API', () => {
                 dusun: 4, // Attempt different dusun
                 hargaBeras: 13000,
                 hargaGabah: 6500,
-                kuartal: 'Q2',
-                totalPanen: 2500
+                kuartal: 'Q2'
             });
 
             const res = await POST(req);
@@ -179,6 +193,7 @@ describe('Records API', () => {
                 dusun: 2,
                 hargaBeras: 13000,
                 hargaGabah: 6500,
+                totalPanen: 0,
                 authorId: 'tengkulak1'
             }));
         });
@@ -194,8 +209,7 @@ describe('Records API', () => {
                 dusun: 1,
                 hargaBeras: 25000, // Exceeds HET 14900
                 hargaGabah: 12000, // Exceeds HPP 7500
-                kuartal: 'Q1',
-                totalPanen: 1000
+                kuartal: 'Q1'
             });
 
             const res = await POST(req);

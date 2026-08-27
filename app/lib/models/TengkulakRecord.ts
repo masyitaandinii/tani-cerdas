@@ -8,7 +8,7 @@ export interface ITengkulakRecord extends Document {
     hargaGabah: number;
     kuartal: Kuartal;
     timestamp: Date;
-    totalPanen: number;
+    totalPanen?: number;
     authorId?: mongoose.Types.ObjectId;
 }
 
@@ -19,7 +19,7 @@ const TengkulakRecordSchema = new Schema<ITengkulakRecord>({
     hargaGabah: { type: Number, required: true },
     kuartal: { type: String, required: true, enum: ['Q1', 'Q2', 'Q3', 'Q4'] },
     timestamp: { type: Date, default: Date.now },
-    totalPanen: { type: Number, required: true },
+    totalPanen: { type: Number, default: 0 },
     authorId: { type: Schema.Types.ObjectId, ref: 'User' }
 });
 

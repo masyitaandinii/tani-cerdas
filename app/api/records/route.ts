@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../lib/auth';
 import connectToDatabase from '../../lib/db';
 import { TengkulakRecord } from '../../lib/models/TengkulakRecord';
+import { PriceBenchmark } from '../../lib/models/PriceBenchmark';
 import { User } from '../../lib/models/User';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
@@ -14,7 +15,7 @@ const RecordSchema = z.object({
     hargaBeras: z.number().positive(),
     hargaGabah: z.number().positive(),
     kuartal: z.enum(['Q1', 'Q2', 'Q3', 'Q4']),
-    totalPanen: z.number().positive()
+    totalPanen: z.number().nonnegative().optional().default(0)
 });
 
 export async function GET(request: Request) {
@@ -100,6 +101,8 @@ export async function POST(request: Request) {
             if (session.user.assignedDusun) {
                 data.dusun = session.user.assignedDusun;
             }
+            // Tengkulak tidak menginputkan total panen
+            data.totalPanen = 0;
         } else if (role === ROLES.ADMIN) {
             if (!session.user.assignedDusun) {
                 return NextResponse.json({ error: 'Forbidden: Admin does not have an assigned dusun', details: null }, { status: 403 });
@@ -131,9 +134,26 @@ export async function POST(request: Request) {
             }
         }
 
-        const isAboveBenchmark = 
-            data.hargaBeras > GOVERNMENT_PRICE_BENCHMARKS.beras.max ||
-            data.hargaGabah > GOVERNMENT_PRICE_BENCHMARKS.gabah.max;
+        let berasMin = GOVERNMENT_PRICE_BENCHMARKS.beras.min;
+        let berasMax = GOVERNMENT_PRICE_BENCHMARKS.beras.max;
+        let gabahMin = GOVERNMENT_PRICE_BENCHMARKS.gabah.min;
+        let gabahMax = GOVERNMENT_PRICE_BENCHMARKS.gabah.max;
+        try {
+            const dynamicBm = await PriceBenchmark.findOne().sort({ updatedAt: -1 }).lean();
+            if (dynamicBm?.beras?.min) berasMin = dynamicBm.beras.min;
+            if (dynamicBm?.beras?.max) berasMax = dynamicBm.beras.max;
+            if (dynamicBm?.gabah?.min) gabahMin = dynamicBm.gabah.min;
+            if (dynamicBm?.gabah?.max) gabahMax = dynamicBm.gabah.max;
+        } catch {
+            // fallback to constants
+        }
+
+        let warning: string | null = null;
+        if (data.hargaBeras > berasMax || data.hargaGabah > gabahMax) {
+            warning = 'Harga yang dimasukkan melebihi batas acuan pemerintah (HET/HPP).';
+        } else if (data.hargaBeras < berasMin || data.hargaGabah < gabahMin) {
+            warning = 'Harga yang dimasukkan berada di bawah batas acuan pemerintah (HET/HPP).';
+        }
 
         const recordObj = newRecord.toObject();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -142,7 +162,7 @@ export async function POST(request: Request) {
         return NextResponse.json({
             ...restObj,
             id: _id.toString(),
-            warning: isAboveBenchmark ? 'Harga yang dimasukkan melebihi batas acuan pemerintah (HET/HPP).' : null
+            warning
         }, { status: 201 });
     } catch (error) {
         console.error('POST /api/records error:', error);
