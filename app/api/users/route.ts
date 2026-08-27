@@ -39,7 +39,7 @@ export async function POST(request: Request) {
             if (parsed.data.assignedDusun !== session.user.assignedDusun) {
                 return NextResponse.json({ error: 'Admin only can create users for their assigned dusun', details: null }, { status: 403 });
             }
-            if (parsed.data.role === 'superadmin' || parsed.data.role === 'admin') {
+            if (parsed.data.role === 'admin') {
                 return NextResponse.json({ error: 'Admin cannot create superadmin or admin', details: null }, { status: 403 });
             }
         }

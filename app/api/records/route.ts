@@ -49,7 +49,8 @@ export async function GET(request: Request) {
             // Strip authorId to avoid exposing internal DB user IDs
             // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
             const { authorId, _id, nama, ...rest } = r as any;
-            return { ...rest, nama, id: _id.toString() };
+            const safeNama = isAuthenticated ? nama : 'Anonim';
+            return { ...rest, nama: safeNama, id: _id.toString() };
         });
 
         if (isPaginated) {
