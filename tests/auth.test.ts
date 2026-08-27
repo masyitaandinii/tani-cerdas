@@ -94,4 +94,48 @@ describe('Auth Credentials Provider - authorize', () => {
             assignedDusun: 1,
         });
     });
+
+    it('resolves alias superadmin and trims whitespace', async () => {
+        // First findOne (regex username) returns null, second (regex name) returns null, third (alias superadmin) returns user
+        vi.mocked(User.findOne)
+            .mockResolvedValueOnce(null)
+            .mockResolvedValueOnce(null)
+            .mockResolvedValueOnce({
+                _id: { toString: () => 'super-id' },
+                name: 'Desa Kedungrejo',
+                role: 'superadmin',
+                password: 'hashedpassword',
+            } as any);
+        vi.mocked(bcrypt.compare).mockResolvedValueOnce(true as never);
+
+        const result = await authorize({ username: '  superadmin  ', password: '123' });
+        expect(result).toEqual({
+            id: 'super-id',
+            name: 'Desa Kedungrejo',
+            role: 'superadmin',
+            assignedDusun: undefined,
+        });
+    });
+
+    it('resolves alias admin1 for dusun 1', async () => {
+        vi.mocked(User.findOne)
+            .mockResolvedValueOnce(null)
+            .mockResolvedValueOnce(null)
+            .mockResolvedValueOnce({
+                _id: { toString: () => 'admin1-id' },
+                name: 'Dusun Karangpilang',
+                role: 'admin',
+                assignedDusun: 1,
+                password: 'hashedpassword',
+            } as any);
+        vi.mocked(bcrypt.compare).mockResolvedValueOnce(true as never);
+
+        const result = await authorize({ username: 'admin1', password: '123' });
+        expect(result).toEqual({
+            id: 'admin1-id',
+            name: 'Dusun Karangpilang',
+            role: 'admin',
+            assignedDusun: 1,
+        });
+    });
 });

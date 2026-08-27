@@ -104,7 +104,11 @@ export function AdminClient() {
             });
 
             if (result?.error) {
-                setLoginError(result.error);
+                if (result.error === "CredentialsSignin") {
+                    setLoginError("Username atau password salah. Silakan periksa kembali.");
+                } else {
+                    setLoginError(result.error);
+                }
             }
         } catch (err) {
             console.error("Login failed:", err);

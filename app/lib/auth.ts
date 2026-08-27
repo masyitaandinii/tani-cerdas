@@ -23,7 +23,34 @@ export const authOptions: NextAuthOptions = {
 
                 await connectToDatabase();
                 
-                const user = await User.findOne({ username: credentials.username });
+                const inputUsername = credentials.username.trim();
+                const escapedUsername = inputUsername.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+                // 1. Try exact or case-insensitive match by username
+                let user = await User.findOne({
+                    username: { $regex: new RegExp(`^${escapedUsername}$`, 'i') }
+                });
+
+                // 2. If not found, try matching by name
+                if (!user) {
+                    user = await User.findOne({
+                        name: { $regex: new RegExp(`^${escapedUsername}$`, 'i') }
+                    });
+                }
+
+                // 3. If still not found, check common aliases (e.g. 'superadmin', 'admin1', 'admin 1', 'dusun1', 'dusun 1')
+                if (!user) {
+                    const lower = inputUsername.toLowerCase().replace(/\s+/g, '');
+                    if (lower === 'superadmin') {
+                        user = await User.findOne({ role: 'superadmin' });
+                    } else {
+                        const adminMatch = lower.match(/^(?:admin|dusun)([1-4])$/);
+                        if (adminMatch) {
+                            const dusunNumber = parseInt(adminMatch[1], 10);
+                            user = await User.findOne({ role: 'admin', assignedDusun: dusunNumber });
+                        }
+                    }
+                }
                 
                 if (!user || !user.password) {
                     throw new Error('Invalid username or password');
