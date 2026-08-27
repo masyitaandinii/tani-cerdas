@@ -69,13 +69,25 @@ export function DashboardCharts({ filterLevel, selectedDusun, selectedKuartal }:
             })).filter(item => item["Harga Beras"] > 0 || item["Harga Gabah"] > 0);
 
         } else {
-            // Filter level is Dusun -> show inner data by Tengkulak instead
+            // Filter level is Dusun -> show data by Tengkulak
             const dusunRecords = filtered.filter(r => r.dusun === selectedDusun);
-            return dusunRecords.map((r, i) => ({
-                name: r.nama,
-                "Harga Beras": r.hargaBeras,
-                "Harga Gabah": r.hargaGabah,
-            }));
+            const tengkulakMap: Record<string, { totalBeras: number; totalGabah: number; count: number }> = {};
+
+            dusunRecords.forEach(r => {
+                const tName = r.nama?.trim() || 'Tengkulak';
+                if (!tengkulakMap[tName]) {
+                    tengkulakMap[tName] = { totalBeras: 0, totalGabah: 0, count: 0 };
+                }
+                tengkulakMap[tName].count++;
+                tengkulakMap[tName].totalBeras += r.hargaBeras;
+                tengkulakMap[tName].totalGabah += r.hargaGabah;
+            });
+
+            return Object.entries(tengkulakMap).map(([tName, val]) => ({
+                name: tName,
+                "Harga Beras": Math.round(val.totalBeras / val.count),
+                "Harga Gabah": Math.round(val.totalGabah / val.count),
+            })).filter(item => item["Harga Beras"] > 0 || item["Harga Gabah"] > 0);
         }
     }, [records, filterLevel, selectedDusun, selectedKuartal]);
 

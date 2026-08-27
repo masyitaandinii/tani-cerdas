@@ -43,7 +43,7 @@ describe('Records API', () => {
     });
 
     describe('GET /api/records', () => {
-        it('should mask names and hide authorId for unauthenticated users', async () => {
+        it('should return tengkulak names and hide authorId for unauthenticated users', async () => {
             (getServerSession as any).mockResolvedValue(null); // No session
             const mockData = [{ _id: 'id1', nama: 'Budi', authorId: 'user123', dusun: 1, hargaBeras: 10000 }];
             
@@ -61,7 +61,7 @@ describe('Records API', () => {
             const res = await GET(mockRequest());
             const data = await res.json();
             
-            expect(data[0].nama).toBe('Anonim');
+            expect(data[0].nama).toBe('Budi');
             expect(data[0].authorId).toBeUndefined();
             expect(data[0].hargaBeras).toBe(10000); // other fields retained
         });
