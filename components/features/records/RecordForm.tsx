@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { PlusCircle, AlertCircle } from 'lucide-react';
-import { RecordFormData, Kuartal } from '@/types';
+import { RecordFormData, Kuartal, PriceBenchmark } from '@/types';
 import { DUSUN_NAMES, GOVERNMENT_PRICE_BENCHMARKS } from '@/app/lib/constants';
 import { searchTengkulak } from '@/services/tengkulakService';
+import { fetchBenchmarkPrices } from '@/services/benchmarkService';
 
 interface RecordFormProps {
     formData: RecordFormData;
@@ -23,6 +24,18 @@ export function RecordForm({
 }: RecordFormProps) {
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [benchmarks, setBenchmarks] = useState<PriceBenchmark>({
+        beras: GOVERNMENT_PRICE_BENCHMARKS.beras,
+        gabah: GOVERNMENT_PRICE_BENCHMARKS.gabah,
+    });
+
+    useEffect(() => {
+        async function loadBm() {
+            const data = await fetchBenchmarkPrices();
+            setBenchmarks(data);
+        }
+        loadBm();
+    }, []);
 
     useEffect(() => {
         if (!formData.nama.trim()) {
@@ -39,8 +52,15 @@ export function RecordForm({
 
     const numBeras = Number(formData.hargaBeras) || 0;
     const numGabah = Number(formData.hargaGabah) || 0;
-    const isBerasOver = numBeras > GOVERNMENT_PRICE_BENCHMARKS.beras.max;
-    const isGabahOver = numGabah > GOVERNMENT_PRICE_BENCHMARKS.gabah.max;
+    const berasMin = benchmarks.beras?.min || GOVERNMENT_PRICE_BENCHMARKS.beras.min;
+    const berasMax = benchmarks.beras?.max || GOVERNMENT_PRICE_BENCHMARKS.beras.max;
+    const gabahMin = benchmarks.gabah?.min || GOVERNMENT_PRICE_BENCHMARKS.gabah.min;
+    const gabahMax = benchmarks.gabah?.max || GOVERNMENT_PRICE_BENCHMARKS.gabah.max;
+
+    const isBerasOver = numBeras > 0 && numBeras > berasMax;
+    const isBerasUnder = numBeras > 0 && numBeras < berasMin;
+    const isGabahOver = numGabah > 0 && numGabah > gabahMax;
+    const isGabahUnder = numGabah > 0 && numGabah < gabahMin;
 
     return (
         <div className="bg-white rounded-[1.75rem] border border-[#e2e0d4] shadow-sm overflow-hidden">
@@ -50,14 +70,14 @@ export function RecordForm({
                     {"Tambah Data Tengkulak"}
                 </h3>
                 <p className="text-[11px] text-white/70 mt-1 ml-7">
-                    Menambah data ini otomatis mengupdate setoran Tengkulak tersebut.
+                    Menambah data ini otomatis mengupdate setoran & panen Tengkulak.
                 </p>
             </div>
 
             <form onSubmit={onSubmit} className="p-6 space-y-4">
                 <div className="relative">
                     <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
-                        Nama Tengkulak
+                        Nama Tengkulak *
                     </label>
                     <input
                         type="text"
@@ -111,7 +131,7 @@ export function RecordForm({
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
-                            Harga Beras (Rp/Kg)
+                            Harga Beras (Rp/Kg) *
                         </label>
                         <input
                             type="number"
@@ -119,19 +139,24 @@ export function RecordForm({
                             value={formData.hargaBeras}
                             onChange={(e) => onChange({ ...formData, hargaBeras: e.target.value })}
                             className={"w-full px-4 py-2.5 rounded-xl border bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b] " + (
-                                isBerasOver ? 'border-amber-400 ring-1 ring-amber-400' : 'border-[#e2e0d4]'
+                                isBerasOver ? 'border-red-400 ring-1 ring-red-400' : isBerasUnder ? 'border-amber-400 ring-1 ring-amber-400' : 'border-[#e2e0d4]'
                             )}
                             placeholder="Rp"
                         />
                         {isBerasOver && (
+                            <p className="text-[10px] text-red-700 font-bold mt-1 flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" /> Melebihi HET (Max Rp {berasMax.toLocaleString('id-ID')})
+                            </p>
+                        )}
+                        {isBerasUnder && (
                             <p className="text-[10px] text-amber-700 font-bold mt-1 flex items-center gap-1">
-                                <AlertCircle className="w-3 h-3" /> Melebihi HET (Max Rp {GOVERNMENT_PRICE_BENCHMARKS.beras.max.toLocaleString('id-ID')})
+                                <AlertCircle className="w-3 h-3" /> Di bawah HET (Min Rp {berasMin.toLocaleString('id-ID')})
                             </p>
                         )}
                     </div>
                     <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
-                            Harga Gabah (Rp/Kg)
+                            Harga Gabah (Rp/Kg) *
                         </label>
                         <input
                             type="number"
@@ -139,13 +164,18 @@ export function RecordForm({
                             value={formData.hargaGabah}
                             onChange={(e) => onChange({ ...formData, hargaGabah: e.target.value })}
                             className={"w-full px-4 py-2.5 rounded-xl border bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b] " + (
-                                isGabahOver ? 'border-amber-400 ring-1 ring-amber-400' : 'border-[#e2e0d4]'
+                                isGabahOver ? 'border-red-400 ring-1 ring-red-400' : isGabahUnder ? 'border-amber-400 ring-1 ring-amber-400' : 'border-[#e2e0d4]'
                             )}
                             placeholder="Rp"
                         />
                         {isGabahOver && (
+                            <p className="text-[10px] text-red-700 font-bold mt-1 flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" /> Melebihi HPP (Max Rp {gabahMax.toLocaleString('id-ID')})
+                            </p>
+                        )}
+                        {isGabahUnder && (
                             <p className="text-[10px] text-amber-700 font-bold mt-1 flex items-center gap-1">
-                                <AlertCircle className="w-3 h-3" /> Melebihi HPP (Max Rp {GOVERNMENT_PRICE_BENCHMARKS.gabah.max.toLocaleString('id-ID')})
+                                <AlertCircle className="w-3 h-3" /> Di bawah HPP (Min Rp {gabahMin.toLocaleString('id-ID')})
                             </p>
                         )}
                     </div>
@@ -169,15 +199,14 @@ export function RecordForm({
                     </div>
                     <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
-                            Total Panen
+                            Total Panen (Kg)
                         </label>
                         <input
                             type="number"
-                            required
                             value={formData.totalPanen}
                             onChange={(e) => onChange({ ...formData, totalPanen: e.target.value })}
                             className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
-                            placeholder="Kg"
+                            placeholder="Kg (Opsional)"
                         />
                     </div>
                 </div>

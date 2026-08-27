@@ -12,7 +12,7 @@ import {
     ChevronRight,
     LogIn,
 } from "lucide-react";
-import { TengkulakRecord } from "../lib/data";
+import { TengkulakRecord, PriceBenchmark } from "@/types";
 import {
     BarChart,
     Bar,
@@ -27,7 +27,8 @@ import {
 } from "recharts";
 import { useSession, signIn } from "next-auth/react";
 import { Navbar } from "../components/Navbar";
-import { DUSUN_NAMES } from "../lib/constants";
+import { DUSUN_NAMES, GOVERNMENT_PRICE_BENCHMARKS } from "../lib/constants";
+import { fetchBenchmarkPrices } from "@/services/benchmarkService";
 
 export function AdminClient() {
     const { data: session, status } = useSession();
@@ -51,6 +52,10 @@ export function AdminClient() {
     );
     const [selectedKuartal, setSelectedKuartal] = useState<string>("ALL");
     const [records, setRecords] = useState<TengkulakRecord[]>([]);
+    const [benchmarks, setBenchmarks] = useState<PriceBenchmark>({
+        beras: GOVERNMENT_PRICE_BENCHMARKS.beras,
+        gabah: GOVERNMENT_PRICE_BENCHMARKS.gabah,
+    });
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -61,6 +66,18 @@ export function AdminClient() {
             router.replace("/tengkulak");
         }
     }, [session, router]);
+
+    useEffect(() => {
+        async function loadBm() {
+            try {
+                const bmData = await fetchBenchmarkPrices();
+                if (bmData) setBenchmarks(bmData);
+            } catch (err) {
+                console.error("Failed to load benchmarks:", err);
+            }
+        }
+        loadBm();
+    }, []);
 
     useEffect(() => {
         if (!session?.user) return;
@@ -275,10 +292,16 @@ export function AdminClient() {
         });
     })();
 
+    const berasMin = benchmarks.beras?.min || GOVERNMENT_PRICE_BENCHMARKS.beras.min;
+    const berasMax = benchmarks.beras?.max || GOVERNMENT_PRICE_BENCHMARKS.beras.max;
+    const gabahMin = benchmarks.gabah?.min || GOVERNMENT_PRICE_BENCHMARKS.gabah.min;
+    const gabahMax = benchmarks.gabah?.max || GOVERNMENT_PRICE_BENCHMARKS.gabah.max;
+
     return (
         <div className="min-h-screen bg-[#f4f3ea] text-[#121e14] flex flex-col selection:bg-[#d6f837] selection:text-[#121e14]">
             <Navbar />
             <main className="flex-1 w-full max-w-7xl mx-auto p-6 md:p-10 space-y-8 animate-in fade-in duration-500">
+                {/* Header Banner */}
                 <div className="bg-[#15291b] p-8 rounded-[2rem] text-white shadow-xl border border-white/10 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div className="relative z-10 space-y-2">
                         <div className="flex items-center gap-2 text-xs font-semibold text-[#d6f837]">
@@ -319,6 +342,25 @@ export function AdminClient() {
                     </div>
                 </div>
 
+                {/* Benchmark Info Banner (Bapanas) */}
+                <div className="bg-white p-4 rounded-2xl border border-[#e2e0d4] shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
+                            BAP
+                        </div>
+                        <div>
+                            <h4 className="text-xs font-bold text-[#121e14]">Acuan Standar Harga Pemerintah (Bapanas)</h4>
+                            <p className="text-[11px] text-[#121e14]/60">
+                                HET Beras: Rp {berasMin.toLocaleString('id-ID')} - Rp {berasMax.toLocaleString('id-ID')}/Kg • HPP Gabah: Rp {gabahMin.toLocaleString('id-ID')} - Rp {gabahMax.toLocaleString('id-ID')}/Kg
+                            </p>
+                        </div>
+                    </div>
+                    <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-bold border border-emerald-200">
+                        Acuan Aktif
+                    </span>
+                </div>
+
+                {/* 4 Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div className="bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm flex flex-col justify-between">
                         <div>
@@ -332,6 +374,12 @@ export function AdminClient() {
                                 Rp {stats.avgBeras.toLocaleString("id-ID")}{" "}
                                 <span className="text-xs font-semibold text-[#121e14]/50">/kg</span>
                             </h3>
+                            <div className="mt-3 pt-3 border-t border-[#e2e0d4]/80 flex items-center justify-between text-[10px] font-semibold text-[#121e14]/70">
+                                <span>HET Acuan:</span>
+                                <span className="text-[#15291b] font-bold">
+                                    Rp {berasMin.toLocaleString("id-ID")} - {berasMax.toLocaleString("id-ID")}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -347,6 +395,12 @@ export function AdminClient() {
                                 Rp {stats.avgGabah.toLocaleString("id-ID")}{" "}
                                 <span className="text-xs font-semibold text-[#121e14]/50">/kg</span>
                             </h3>
+                            <div className="mt-3 pt-3 border-t border-[#e2e0d4]/80 flex items-center justify-between text-[10px] font-semibold text-[#121e14]/70">
+                                <span>HPP Acuan:</span>
+                                <span className="text-amber-800 font-bold">
+                                    Rp {gabahMin.toLocaleString("id-ID")} - {gabahMax.toLocaleString("id-ID")}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -371,6 +425,7 @@ export function AdminClient() {
                     </div>
                 </div>
 
+                {/* Filter Periode */}
                 <div className="bg-white p-4 rounded-2xl border border-[#e2e0d4] shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between">
                     <div className="flex items-center gap-2 text-xs font-bold text-[#121e14]/80">
                         <Calendar className="w-4 h-4 text-[#15291b]" />
@@ -400,6 +455,7 @@ export function AdminClient() {
                     </div>
                 </div>
 
+                {/* Charts */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div className="bg-white p-6 sm:p-8 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm flex flex-col justify-between">
                         <div className="mb-6">
@@ -510,6 +566,7 @@ export function AdminClient() {
                     </div>
                 </div>
 
+                {/* Table with Status Bapanas */}
                 <div className="bg-white rounded-[1.75rem] border border-[#e2e0d4] shadow-sm overflow-hidden">
                     <div className="p-6 border-b border-[#e2e0d4] flex justify-between items-center bg-[#f4f3ea]">
                         <div>
@@ -546,36 +603,61 @@ export function AdminClient() {
                                         <th className="px-6 py-4 font-bold">Harga Beras</th>
                                         <th className="px-6 py-4 font-bold">Harga Gabah</th>
                                         <th className="px-6 py-4 font-bold">Total Panen (Kg)</th>
+                                        <th className="px-6 py-4 font-bold">Status Bapanas</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[#e2e0d4]">
-                                    {dusunRecords.map((r) => (
-                                        <tr
-                                            key={r.id}
-                                            className="hover:bg-[#f4f3ea]/60 transition-colors text-xs font-semibold"
-                                        >
-                                            <td className="px-6 py-4 text-[#121e14]">
-                                                {new Date(r.timestamp).toLocaleDateString("id-ID")}
-                                            </td>
-                                            <td className="px-6 py-4 font-bold text-[#121e14]">
-                                                {r.nama}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className="bg-[#15291b] text-[#d6f837] px-2.5 py-1 rounded-md text-[10px] font-bold">
-                                                    {r.kuartal ? r.kuartal.replace("Q", "Periode ") : ""}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-[#121e14]">
-                                                Rp {r.hargaBeras.toLocaleString("id-ID")}
-                                            </td>
-                                            <td className="px-6 py-4 text-[#121e14]">
-                                                Rp {r.hargaGabah.toLocaleString("id-ID")}
-                                            </td>
-                                            <td className="px-6 py-4 font-bold text-[#15291b]">
-                                                {(r.totalPanen || 0).toLocaleString("id-ID")} Kg
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {dusunRecords.map((r) => {
+                                        const isOver = r.hargaBeras > berasMax || r.hargaGabah > gabahMax;
+                                        const isUnder = r.hargaBeras < berasMin || r.hargaGabah < gabahMin;
+
+                                        return (
+                                            <tr
+                                                key={r.id}
+                                                className="hover:bg-[#f4f3ea]/60 transition-colors text-xs font-semibold"
+                                            >
+                                                <td className="px-6 py-4 text-[#121e14]/70">
+                                                    {new Date(r.timestamp).toLocaleDateString("id-ID", {
+                                                        day: '2-digit',
+                                                        month: 'short',
+                                                        year: 'numeric'
+                                                    })}
+                                                </td>
+                                                <td className="px-6 py-4 font-bold text-[#121e14]">
+                                                    {r.nama}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="bg-[#f4f3ea] text-[#121e14] px-2.5 py-1 rounded-md text-[11px] font-bold border border-[#e2e0d4]">
+                                                        {r.kuartal ? r.kuartal.replace("Q", "Periode ") : ""}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-[#15291b] font-bold">
+                                                    Rp {r.hargaBeras.toLocaleString("id-ID")}
+                                                </td>
+                                                <td className="px-6 py-4 text-[#15291b] font-bold">
+                                                    Rp {r.hargaGabah.toLocaleString("id-ID")}
+                                                </td>
+                                                <td className="px-6 py-4 font-bold text-[#15291b]">
+                                                    {(r.totalPanen || 0).toLocaleString("id-ID")} Kg
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {isOver ? (
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-red-100 text-red-800 px-2.5 py-0.5 rounded-full border border-red-200">
+                                                            Di Atas Acuan
+                                                        </span>
+                                                    ) : isUnder ? (
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full border border-amber-200">
+                                                            Di Bawah Acuan
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                                                            Sesuai Acuan
+                                                        </span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>

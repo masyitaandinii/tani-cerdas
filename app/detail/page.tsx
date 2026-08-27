@@ -15,7 +15,9 @@ import {
     UserForm,
     UserTable,
     EditUserModal,
+    EditProfileModal,
 } from '@/components/features/users';
+import { BenchmarkPriceManager } from '@/components/features/benchmarks';
 import { TengkulakDashboard } from '@/components/features/tengkulak';
 import { ConfirmModal, SuccessModal } from '@/components/ui';
 import {
@@ -36,8 +38,10 @@ import {
     AppUser,
     UserFormData,
     EditUserFormData,
-    Kuartal,
+    PriceBenchmark,
 } from '@/types';
+import { GOVERNMENT_PRICE_BENCHMARKS } from '@/app/lib/constants';
+import { fetchBenchmarkPrices } from '@/services/benchmarkService';
 
 export default function InputDashboardPage() {
     const { data: session, status } = useSession();
@@ -52,8 +56,16 @@ export default function InputDashboardPage() {
           }
         : null;
 
+    const [currentUserName, setCurrentUserName] = useState(activeUser?.name || 'Pengguna');
+
+    useEffect(() => {
+        if (activeUser?.name) {
+            setCurrentUserName(activeUser.name);
+        }
+    }, [activeUser?.name]);
+
     // Tabs & Navigation State
-    const [activeTab, setActiveTab] = useState<'data' | 'user'>('data');
+    const [activeTab, setActiveTab] = useState<'data' | 'user' | 'bapanas'>('data');
     const [selectedDusunFilter, setSelectedDusunFilter] = useState<number | 'ALL'>('ALL');
 
     // Modals Feedback State
@@ -61,6 +73,9 @@ export default function InputDashboardPage() {
         open: false,
         message: '',
     });
+
+    // Profile Edit State
+    const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
     // Record States
     const [records, setRecords] = useState<TengkulakRecord[]>([]);
@@ -116,7 +131,22 @@ export default function InputDashboardPage() {
         }
     }, [status, router]);
 
+    // Benchmark States
+    const [benchmarks, setBenchmarks] = useState<PriceBenchmark>({
+        beras: GOVERNMENT_PRICE_BENCHMARKS.beras,
+        gabah: GOVERNMENT_PRICE_BENCHMARKS.gabah,
+    });
+
     // Data Loaders
+    const loadBenchmarks = async () => {
+        try {
+            const data = await fetchBenchmarkPrices();
+            if (data) setBenchmarks(data);
+        } catch {
+            // fallback to default
+        }
+    };
+
     const loadRecords = async () => {
         setLoadingRecords(true);
         const data = await fetchRecords();
@@ -136,6 +166,7 @@ export default function InputDashboardPage() {
 
     useEffect(() => {
         if (session?.user) {
+            loadBenchmarks();
             loadRecords();
             if (session.user.role === 'superadmin' || session.user.role === 'admin') {
                 loadUsers();
@@ -145,6 +176,15 @@ export default function InputDashboardPage() {
 
     const handleLogout = () => {
         signOut({ callbackUrl: '/admin' });
+    };
+
+    const handleProfileUpdated = (updatedUser: { name: string; whatsapp?: string }) => {
+        setCurrentUserName(updatedUser.name);
+        setSuccessModal({
+            open: true,
+            title: 'Profil Berhasil Diperbarui!',
+            message: 'Perubahan informasi profil Anda telah disimpan.',
+        });
     };
 
     // Record Action Handlers
@@ -159,7 +199,7 @@ export default function InputDashboardPage() {
             hargaBeras: Number(recordFormData.hargaBeras),
             hargaGabah: Number(recordFormData.hargaGabah),
             kuartal: recordFormData.kuartal,
-            totalPanen: Number(recordFormData.totalPanen),
+            totalPanen: Number(recordFormData.totalPanen) || 0,
         });
         setIsSubmittingRecord(false);
 
@@ -205,7 +245,7 @@ export default function InputDashboardPage() {
             hargaBeras: Number(editRecordFormData.hargaBeras),
             hargaGabah: Number(editRecordFormData.hargaGabah),
             kuartal: editRecordFormData.kuartal,
-            totalPanen: Number(editRecordFormData.totalPanen),
+            totalPanen: Number(editRecordFormData.totalPanen) || 0,
         });
         setIsUpdatingRecord(false);
 
@@ -375,9 +415,13 @@ export default function InputDashboardPage() {
     return (
         <div className="min-h-screen bg-[#f4f3ea] text-[#121e14] flex flex-col selection:bg-[#d6f837] selection:text-[#121e14]">
             <Navbar />
-            <main className="flex-1 w-full max-w-7xl mx-auto p-6 md:p-10 space-y-8 animate-in fade-in duration-500">
-                {/* Header Section */}
-                <PageHeader user={activeUser} onLogout={handleLogout} />
+            <main className="flex-1 w-full max-w-7xl mx-auto p-6 md:p-10 space-y-8">
+                {/* Header Section with Edit Profile Button */}
+                <PageHeader
+                    user={{ ...activeUser, name: currentUserName }}
+                    onLogout={handleLogout}
+                    onEditProfile={() => setIsEditProfileOpen(true)}
+                />
 
                 {/* Dusun Filter Bar for Superadmin */}
                 {activeUser.role === 'superadmin' && activeTab === 'data' && (
@@ -388,83 +432,136 @@ export default function InputDashboardPage() {
                     />
                 )}
 
-                {/* Main Content Grid */}
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                    {/* Form Sidebar */}
-                    <div className="xl:col-span-1">
-                        <div className="bg-white rounded-[1.75rem] border border-[#e2e0d4] shadow-sm overflow-hidden sticky top-24">
-                            {/* Tab Switcher */}
-                            <div className="flex border-b border-[#e2e0d4]">
-                                <button
-                                    onClick={() => setActiveTab('data')}
-                                    className={"flex-1 py-4 text-xs font-bold uppercase tracking-wider text-center transition-colors " + (
-                                        activeTab === 'data'
-                                            ? 'bg-[#15291b] text-[#d6f837]'
-                                            : 'bg-[#f4f3ea] text-[#121e14]/60 hover:bg-[#e2e0d4]'
-                                    )}
-                                    type="button"
-                                >
-                                    Data Panen
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setActiveTab('user');
-                                        loadUsers();
-                                    }}
-                                    className={"flex-1 py-4 text-xs font-bold uppercase tracking-wider text-center transition-colors " + (
-                                        activeTab === 'user'
-                                            ? 'bg-[#15291b] text-[#d6f837]'
-                                            : 'bg-[#f4f3ea] text-[#121e14]/60 hover:bg-[#e2e0d4]'
-                                    )}
-                                    type="button"
-                                >
-                                    {activeUser.role === 'admin' ? 'Kelola Tengkulak' : 'Manajemen Akun'}
-                                </button>
-                            </div>
-
-                            {activeTab === 'data' ? (
-                                <RecordForm
-                                    formData={recordFormData}
-                                    onChange={setRecordFormData}
-                                    onSubmit={handleRecordSubmit}
-                                    isSubmitting={isSubmittingRecord}
-                                    role={activeUser.role}
-                                    assignedDusun={activeUser.assignedDusun}
-                                />
-                            ) : (
-                                <UserForm
-                                    formData={userFormData}
-                                    onChange={setUserFormData}
-                                    onSubmit={handleUserSubmit}
-                                    isSubmitting={isSubmittingUser}
-                                    role={activeUser.role}
-                                    assignedDusun={activeUser.assignedDusun}
-                                />
-                            )}
+                {/* Benchmark Info Banner (Bapanas) */}
+                <div className="bg-white p-4 rounded-2xl border border-[#e2e0d4] shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
+                            BAP
+                        </div>
+                        <div>
+                            <h4 className="text-xs font-bold text-[#121e14]">Acuan Standar Harga Pemerintah (Bapanas)</h4>
+                            <p className="text-[11px] text-[#121e14]/60">
+                                HET Beras: Rp {(benchmarks.beras?.min || GOVERNMENT_PRICE_BENCHMARKS.beras.min).toLocaleString('id-ID')} - Rp {(benchmarks.beras?.max || GOVERNMENT_PRICE_BENCHMARKS.beras.max).toLocaleString('id-ID')}/Kg • HPP Gabah: Rp {(benchmarks.gabah?.min || GOVERNMENT_PRICE_BENCHMARKS.gabah.min).toLocaleString('id-ID')} - Rp {(benchmarks.gabah?.max || GOVERNMENT_PRICE_BENCHMARKS.gabah.max).toLocaleString('id-ID')}/Kg
+                            </p>
                         </div>
                     </div>
+                    <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-bold border border-emerald-200">
+                        Acuan Aktif
+                    </span>
+                </div>
 
-                    {/* Table Right Area */}
-                    <div className="xl:col-span-2 space-y-8">
-                        {activeTab === 'data' ? (
-                            <RecordTable
-                                records={filteredRecords}
-                                isLoading={loadingRecords}
-                                onEdit={handleOpenEditRecord}
-                                onDelete={(r) => setDeletingRecord(r)}
-                            />
-                        ) : (
-                            <UserTable
-                                users={usersList}
-                                isLoading={loadingUsers}
-                                onEdit={handleOpenEditUser}
-                                onDelete={(u) => setDeletingUser(u)}
-                                role={activeUser.role}
-                            />
-                        )}
+                {/* Main Content: Tabs for Data Panen, Kelola Akun, and Acuan Bapanas */}
+                <div className="space-y-6">
+                    {/* Navigation Tab Bar */}
+                    <div className="flex border-b border-[#e2e0d4] bg-white rounded-2xl p-1.5 shadow-sm gap-2 max-w-xl">
+                        <button
+                            onClick={() => setActiveTab('data')}
+                            className={"flex-1 py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-center transition-all " + (
+                                activeTab === 'data'
+                                    ? 'bg-[#15291b] text-[#d6f837] shadow-sm'
+                                    : 'text-[#121e14]/70 hover:bg-[#f4f3ea]'
+                            )}
+                            type="button"
+                        >
+                            Data Panen Desa
+                        </button>
+                        <button
+                            onClick={() => {
+                                setActiveTab('user');
+                                loadUsers();
+                            }}
+                            className={"flex-1 py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-center transition-all " + (
+                                activeTab === 'user'
+                                    ? 'bg-[#15291b] text-[#d6f837] shadow-sm'
+                                    : 'text-[#121e14]/70 hover:bg-[#f4f3ea]'
+                            )}
+                            type="button"
+                        >
+                            {activeUser.role === 'admin' ? 'Kelola Tengkulak' : 'Manajemen Akun'}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('bapanas')}
+                            className={"flex-1 py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-center transition-all " + (
+                                activeTab === 'bapanas'
+                                    ? 'bg-[#15291b] text-[#d6f837] shadow-sm'
+                                    : 'text-[#121e14]/70 hover:bg-[#f4f3ea]'
+                            )}
+                            type="button"
+                        >
+                            Acuan Bapanas
+                        </button>
                     </div>
+
+                    {/* Tab Views */}
+                    {activeTab === 'bapanas' ? (
+                        <BenchmarkPriceManager
+                            onBenchmarkUpdated={() => {
+                                loadBenchmarks();
+                                loadRecords();
+                            }}
+                            onShowSuccess={(title, msg) => setSuccessModal({ open: true, title, message: msg })}
+                        />
+                    ) : (
+                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                            {/* Form Sidebar */}
+                            <div className="xl:col-span-1">
+                                {activeTab === 'data' ? (
+                                    <RecordForm
+                                        formData={recordFormData}
+                                        onChange={setRecordFormData}
+                                        onSubmit={handleRecordSubmit}
+                                        isSubmitting={isSubmittingRecord}
+                                        role={activeUser.role}
+                                        assignedDusun={activeUser.assignedDusun}
+                                    />
+                                ) : (
+                                    <UserForm
+                                        formData={userFormData}
+                                        onChange={setUserFormData}
+                                        onSubmit={handleUserSubmit}
+                                        isSubmitting={isSubmittingUser}
+                                        role={activeUser.role}
+                                        assignedDusun={activeUser.assignedDusun}
+                                    />
+                                )}
+                            </div>
+
+                            {/* Table Right Area */}
+                            <div className="xl:col-span-2 space-y-8">
+                                {activeTab === 'data' ? (
+                                    <RecordTable
+                                        records={filteredRecords}
+                                        isLoading={loadingRecords}
+                                        benchmarks={benchmarks}
+                                        onEdit={handleOpenEditRecord}
+                                        onDelete={(r) => setDeletingRecord(r)}
+                                    />
+                                ) : (
+                                    <UserTable
+                                        users={usersList}
+                                        isLoading={loadingUsers}
+                                        onEdit={handleOpenEditUser}
+                                        onDelete={(u) => setDeletingUser(u)}
+                                        role={activeUser.role}
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </main>
+
+            {/* Edit Profile Modal for Admin/Superadmin */}
+            <EditProfileModal
+                isOpen={isEditProfileOpen}
+                onClose={() => setIsEditProfileOpen(false)}
+                user={{
+                    id: activeUser.id || '',
+                    name: currentUserName,
+                    role: activeUser.role,
+                }}
+                onProfileUpdated={handleProfileUpdated}
+            />
 
             {/* Edit Record Modal */}
             <EditRecordModal

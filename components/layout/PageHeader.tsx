@@ -1,16 +1,17 @@
 import React from 'react';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, UserPen } from 'lucide-react';
 import { SessionUser } from '@/types';
 import { DUSUN_NAMES } from '@/app/lib/constants';
 
 interface PageHeaderProps {
     user: SessionUser;
     onLogout: () => void;
+    onEditProfile?: () => void;
     title?: string;
     subtitle?: string;
 }
 
-export function PageHeader({ user, onLogout, title, subtitle }: PageHeaderProps) {
+export function PageHeader({ user, onLogout, onEditProfile, title, subtitle }: PageHeaderProps) {
     const defaultTitle = user.role === 'superadmin'
         ? 'Panel Superadmin Desa'
         : user.role === 'admin'
@@ -38,13 +39,24 @@ export function PageHeader({ user, onLogout, title, subtitle }: PageHeaderProps)
                     </p>
                 </div>
             </div>
-            <button
-                onClick={onLogout}
-                className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold bg-[#f4f3ea] border border-[#e2e0d4] rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all text-[#121e14] shadow-sm"
-            >
-                <LogOut className="w-4 h-4 stroke-[2.2]" />
-                <span>Keluar</span>
-            </button>
+            <div className="flex items-center gap-3">
+                {onEditProfile && (
+                    <button
+                        onClick={onEditProfile}
+                        className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold bg-[#f4f3ea] border border-[#e2e0d4] rounded-xl hover:bg-[#15291b] hover:text-[#d6f837] hover:border-[#15291b] transition-all text-[#121e14] shadow-sm"
+                    >
+                        <UserPen className="w-4 h-4 stroke-[2.2]" />
+                        <span>Edit Profil</span>
+                    </button>
+                )}
+                <button
+                    onClick={onLogout}
+                    className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold bg-[#f4f3ea] border border-[#e2e0d4] rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all text-[#121e14] shadow-sm"
+                >
+                    <LogOut className="w-4 h-4 stroke-[2.2]" />
+                    <span>Keluar</span>
+                </button>
+            </div>
         </div>
     );
 }

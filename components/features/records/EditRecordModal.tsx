@@ -118,10 +118,10 @@ export function EditRecordModal({
                         </label>
                         <input
                             type="number"
-                            required
                             value={formData.totalPanen}
                             onChange={(e) => onChange({ ...formData, totalPanen: e.target.value })}
                             className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
+                            placeholder="Kg (Opsional)"
                         />
                     </div>
                 </div>

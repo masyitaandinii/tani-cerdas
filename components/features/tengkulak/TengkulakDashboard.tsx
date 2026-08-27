@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
-import { User, LogOut, PlusCircle, AlertCircle } from 'lucide-react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
-import { TengkulakRecord, SessionUser, Kuartal } from '@/types';
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { User, LogOut, PlusCircle, AlertCircle, UserPen, CircleDollarSign, Tractor } from 'lucide-react';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { TengkulakRecord, SessionUser, Kuartal, PriceBenchmark } from '@/types';
 import { DUSUN_NAMES, GOVERNMENT_PRICE_BENCHMARKS } from '@/app/lib/constants';
 import { createRecord } from '@/services/recordService';
+import { fetchBenchmarkPrices } from '@/services/benchmarkService';
+import { EditProfileModal } from '../users/EditProfileModal';
 
 interface TengkulakDashboardProps {
     activeUser: SessionUser;
@@ -20,20 +24,38 @@ export function TengkulakDashboard({
     onRefreshRecords,
     onShowSuccess,
 }: TengkulakDashboardProps) {
+    const [benchmarks, setBenchmarks] = useState<PriceBenchmark>({
+        beras: GOVERNMENT_PRICE_BENCHMARKS.beras,
+        gabah: GOVERNMENT_PRICE_BENCHMARKS.gabah,
+    });
+    const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+    const [currentUserName, setCurrentUserName] = useState(activeUser.name || 'Mitra Tengkulak');
+
+    useEffect(() => {
+        async function loadBm() {
+            const data = await fetchBenchmarkPrices();
+            setBenchmarks(data);
+        }
+        loadBm();
+    }, []);
+
     const myRecords = records
-        .filter((r) => r.nama.toLowerCase() === (activeUser.name || '').toLowerCase())
+        .filter((r) => r.nama.toLowerCase() === (currentUserName || '').toLowerCase())
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-    const totalPanenKu = myRecords.reduce((acc, r) => acc + (r.totalPanen || 0), 0);
+    const totalTransaksi = myRecords.length;
+    const avgBerasKu = totalTransaksi > 0 ? Math.round(myRecords.reduce((acc, r) => acc + r.hargaBeras, 0) / totalTransaksi) : 0;
+    const avgGabahKu = totalTransaksi > 0 ? Math.round(myRecords.reduce((acc, r) => acc + r.hargaGabah, 0) / totalTransaksi) : 0;
 
     const chartData = ['Q1', 'Q2', 'Q3', 'Q4'].map((k) => {
         const kRecs = myRecords.filter((r) => r.kuartal === k);
-        const totalP = kRecs.reduce((acc, r) => acc + (r.totalPanen || 0), 0);
-        const avgBeras = kRecs.length > 0 ? kRecs.reduce((acc, r) => acc + r.hargaBeras, 0) / kRecs.length : 0;
+        const count = kRecs.length;
+        const avgB = count > 0 ? kRecs.reduce((acc, r) => acc + r.hargaBeras, 0) / count : 0;
+        const avgG = count > 0 ? kRecs.reduce((acc, r) => acc + r.hargaGabah, 0) / count : 0;
         return {
             kuartal: k.replace('Q', 'Periode '),
-            'Total Panen (Kg)': totalP,
-            'Harga Beras': Math.round(avgBeras),
+            'Harga Beras': Math.round(avgB),
+            'Harga Gabah': Math.round(avgG),
         };
     });
 
@@ -41,26 +63,36 @@ export function TengkulakDashboard({
         hargaBeras: '',
         hargaGabah: '',
         kuartal: 'Q1' as Kuartal,
-        totalPanen: '',
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const berasMin = benchmarks.beras?.min || GOVERNMENT_PRICE_BENCHMARKS.beras.min;
+    const berasMax = benchmarks.beras?.max || GOVERNMENT_PRICE_BENCHMARKS.beras.max;
+    const gabahMin = benchmarks.gabah?.min || GOVERNMENT_PRICE_BENCHMARKS.gabah.min;
+    const gabahMax = benchmarks.gabah?.max || GOVERNMENT_PRICE_BENCHMARKS.gabah.max;
+
     const numBeras = Number(tengkulakForm.hargaBeras) || 0;
     const numGabah = Number(tengkulakForm.hargaGabah) || 0;
-    const isBerasOver = numBeras > GOVERNMENT_PRICE_BENCHMARKS.beras.max;
-    const isGabahOver = numGabah > GOVERNMENT_PRICE_BENCHMARKS.gabah.max;
+
+    const isBerasOver = numBeras > 0 && numBeras > berasMax;
+    const isBerasUnder = numBeras > 0 && numBeras < berasMin;
+    const isGabahOver = numGabah > 0 && numGabah > gabahMax;
+    const isGabahUnder = numGabah > 0 && numGabah < gabahMin;
+
+    const hasOver = isBerasOver || isGabahOver;
+    const hasUnder = isBerasUnder || isGabahUnder;
 
     const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
             const res = await createRecord({
-                nama: activeUser.name || 'Tengkulak',
+                nama: currentUserName,
                 dusun: activeUser.assignedDusun || 1,
                 hargaBeras: Number(tengkulakForm.hargaBeras),
                 hargaGabah: Number(tengkulakForm.hargaGabah),
                 kuartal: tengkulakForm.kuartal,
-                totalPanen: Number(tengkulakForm.totalPanen),
+                totalPanen: 0, // Total panen tidak diinput oleh tengkulak
             });
 
             if (res.success) {
@@ -68,14 +100,13 @@ export function TengkulakDashboard({
                     hargaBeras: '',
                     hargaGabah: '',
                     kuartal: 'Q1',
-                    totalPanen: '',
                 });
                 onRefreshRecords();
                 onShowSuccess(
-                    'Data Berhasil Disimpan!',
+                    'Setoran Harga Berhasil Disimpan!',
                     res.warning
-                        ? res.warning + ' Namun data tetap tersimpan ke sistem.'
-                        : 'Setoran data harga dan hasil panen Anda berhasil dicatat.'
+                        ? res.warning + ' Data tetap tersimpan ke sistem.'
+                        : 'Data harga beras dan gabah Anda berhasil dicatat ke sistem desa.'
                 );
             } else {
                 alert('Gagal menyimpan: ' + (res.error || 'Terjadi kesalahan'));
@@ -85,168 +116,197 @@ export function TengkulakDashboard({
         }
     };
 
+    const handleProfileUpdated = (updatedUser: { name: string; whatsapp?: string }) => {
+        setCurrentUserName(updatedUser.name);
+        onShowSuccess('Profil Diperbarui!', 'Perubahan nama dan kontak Anda telah disimpan.');
+    };
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header */}
-            <div className="flex justify-between items-center bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-[#15291b] text-[#d6f837] rounded-2xl flex items-center justify-center font-bold shadow-sm">
                         <User className="w-6 h-6 stroke-[2.2]" />
                     </div>
                     <div>
                         <h1 className="text-2xl font-extrabold text-[#121e14]">
-                            Halo, {activeUser.name}
+                            Halo, {currentUserName}
                         </h1>
                         <p className="text-[#121e14]/70 text-xs font-semibold mt-0.5">
                             Dusun {DUSUN_NAMES[activeUser.assignedDusun || 1] || activeUser.assignedDusun} • Mitra Tengkulak
                         </p>
                     </div>
                 </div>
-                <button
-                    onClick={onLogout}
-                    className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold bg-[#f4f3ea] border border-[#e2e0d4] rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all text-[#121e14] shadow-sm"
-                >
-                    <LogOut className="w-4 h-4 stroke-[2.2]" /> Keluar
-                </button>
+
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setIsEditProfileOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold bg-[#f4f3ea] border border-[#e2e0d4] rounded-xl hover:bg-[#15291b] hover:text-[#d6f837] hover:border-[#15291b] transition-all text-[#121e14] shadow-sm"
+                    >
+                        <UserPen className="w-4 h-4 stroke-[2.2]" />
+                        <span>Edit Profil</span>
+                    </button>
+                    <button
+                        onClick={onLogout}
+                        className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold bg-[#f4f3ea] border border-[#e2e0d4] rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all text-[#121e14] shadow-sm"
+                    >
+                        <LogOut className="w-4 h-4 stroke-[2.2]" />
+                        <span>Keluar</span>
+                    </button>
+                </div>
             </div>
 
-            {/* Benchmark Info Banner */}
+            {/* Benchmark Info Banner (Bapanas) */}
             <div className="bg-white p-4 rounded-2xl border border-[#e2e0d4] shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
-                        HET
+                        BAP
                     </div>
                     <div>
                         <h4 className="text-xs font-bold text-[#121e14]">Acuan Standar Harga Pemerintah (Bapanas)</h4>
                         <p className="text-[11px] text-[#121e14]/60">
-                            HET Beras: Rp {GOVERNMENT_PRICE_BENCHMARKS.beras.min.toLocaleString('id-ID')} - Rp {GOVERNMENT_PRICE_BENCHMARKS.beras.max.toLocaleString('id-ID')}/Kg • HPP Gabah: Rp {GOVERNMENT_PRICE_BENCHMARKS.gabah.min.toLocaleString('id-ID')} - Rp {GOVERNMENT_PRICE_BENCHMARKS.gabah.max.toLocaleString('id-ID')}/Kg
+                            HET Beras: Rp {berasMin.toLocaleString('id-ID')} - Rp {berasMax.toLocaleString('id-ID')}/Kg • HPP Gabah: Rp {gabahMin.toLocaleString('id-ID')} - Rp {gabahMax.toLocaleString('id-ID')}/Kg
                         </p>
                     </div>
                 </div>
                 <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-bold border border-emerald-200">
-                    Batas Wajar Aktif
+                    Acuan Aktif
                 </span>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-[#15291b] p-6 rounded-[1.75rem] text-white shadow-lg md:col-span-1 border border-white/10 relative overflow-hidden flex flex-col justify-between">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm flex flex-col justify-between">
                     <div>
-                        <span className="badge-pill-dark text-[10px] mb-3">
-                            <span className="badge-bullet"></span> AKUMULASI PANEN
-                        </span>
-                        <h3 className="text-4xl font-extrabold text-[#d6f837] mt-2">
-                            {(totalPanenKu / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })}{' '}
-                            <span className="text-lg text-white/80">Ton</span>
-                        </h3>
-                        <p className="text-xs text-white/60 mt-1">
-                            Total: {totalPanenKu.toLocaleString('id-ID')} Kg
+                        <div className="w-10 h-10 bg-[#15291b]/10 rounded-xl flex items-center justify-center text-[#15291b] mb-4">
+                            <CircleDollarSign className="w-5 h-5 stroke-[2.2]" />
+                        </div>
+                        <p className="text-xs font-bold uppercase tracking-wider text-[#121e14]/60 mb-1">
+                            Rata-rata Harga Beras Disetor
                         </p>
+                        <h3 className="text-2xl sm:text-3xl font-extrabold text-[#121e14]">
+                            Rp {avgBerasKu.toLocaleString('id-ID')}{' '}
+                            <span className="text-xs font-semibold text-[#121e14]/50">/kg</span>
+                        </h3>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm md:col-span-2 flex flex-col justify-between">
+                <div className="bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm flex flex-col justify-between">
                     <div>
-                        <h3 className="font-bold text-lg text-[#121e14] mb-1">Ringkasan Setoran & Kemitraan</h3>
-                        <p className="text-xs text-[#121e14]/70 leading-relaxed">
-                            Anda tercatat memiliki <strong>{myRecords.length} transaksi setoran</strong> di Dusun {DUSUN_NAMES[activeUser.assignedDusun || 1] || activeUser.assignedDusun}.
+                        <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-700 mb-4">
+                            <Tractor className="w-5 h-5 stroke-[2.2]" />
+                        </div>
+                        <p className="text-xs font-bold uppercase tracking-wider text-[#121e14]/60 mb-1">
+                            Rata-rata Harga Gabah Disetor
                         </p>
+                        <h3 className="text-2xl sm:text-3xl font-extrabold text-[#121e14]">
+                            Rp {avgGabahKu.toLocaleString('id-ID')}{' '}
+                            <span className="text-xs font-semibold text-[#121e14]/50">/kg</span>
+                        </h3>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#e2e0d4]">
-                        <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#121e14]/50">Total Transaksi</span>
-                            <p className="text-base font-extrabold text-[#15291b]">{myRecords.length} Kali</p>
-                        </div>
-                        <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#121e14]/50">Rata-rata Setoran</span>
-                            <p className="text-base font-extrabold text-[#15291b]">
-                                {myRecords.length > 0 ? Math.round(totalPanenKu / myRecords.length).toLocaleString('id-ID') : 0} Kg
-                            </p>
-                        </div>
+                </div>
+
+                <div className="bg-[#15291b] p-6 rounded-[1.75rem] text-white shadow-lg flex flex-col justify-between border border-white/10 relative overflow-hidden">
+                    <div className="relative z-10">
+                        <span className="badge-pill-dark text-[10px] mb-3">
+                            <span className="badge-bullet"></span> AKTIVITAS SETORAN
+                        </span>
+                        <h3 className="text-3xl sm:text-4xl font-extrabold text-[#d6f837] mt-2">
+                            {totalTransaksi}{' '}
+                            <span className="text-base text-white/80 font-bold">Transaksi</span>
+                        </h3>
+                        <p className="text-[11px] text-white/70 mt-2">
+                            *Pencatatan volume total panen desa dikelola oleh Admin Desa.
+                        </p>
                     </div>
                 </div>
             </div>
 
             {/* Form Input + Chart Section */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                {/* Form Input */}
+                {/* Form Input: ONLY Beras & Gabah */}
                 <div className="xl:col-span-1">
                     <div className="bg-white rounded-[1.75rem] border border-[#e2e0d4] shadow-sm overflow-hidden sticky top-24">
                         <div className="bg-[#15291b] p-5 border-b border-white/10 text-white">
                             <h3 className="font-bold flex items-center text-[#d6f837] text-base">
                                 <PlusCircle className="w-5 h-5 mr-2 stroke-[2.5]" />
-                                {"Input Setoran Panen Baru"}
+                                {"Input Setoran Harga Baru"}
                             </h3>
                             <p className="text-[11px] text-white/70 mt-1 ml-7">
-                                Masukkan data harga dan jumlah panen secara mandiri.
+                                Masukkan data harga beras dan harga gabah terkini Anda.
                             </p>
                         </div>
                         <form onSubmit={handleFormSubmit} className="p-6 space-y-4">
-                            {(isBerasOver || isGabahOver) && (
-                                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-[11px] font-medium flex items-start gap-2">
-                                    <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                                    <span>Peringatan: Harga melebihi standar pemerintah, namun tetap dapat disimpan.</span>
+                            {hasOver && (
+                                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-800 text-[11px] font-medium flex items-start gap-2">
+                                    <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                                    <span>Peringatan: Harga melebihi batas atas standar pemerintah (HET/HPP), namun tetap dapat disimpan.</span>
                                 </div>
                             )}
+
+                            {hasUnder && !hasOver && (
+                                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-[11px] font-medium flex items-start gap-2">
+                                    <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                                    <span>Pemberitahuan: Harga berada di bawah batas acuan pemerintah (HET/HPP), namun tetap dapat disimpan.</span>
+                                </div>
+                            )}
+
                             <div>
-                                <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">Harga Beras (Rp/Kg)</label>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
+                                    Harga Beras (Rp/Kg) *
+                                </label>
                                 <input
                                     type="number"
                                     required
                                     value={tengkulakForm.hargaBeras}
                                     onChange={(e) => setTengkulakForm({ ...tengkulakForm, hargaBeras: e.target.value })}
-                                    className={"w-full px-4 py-2.5 rounded-xl border bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b] " + (
-                                        isBerasOver ? 'border-amber-400 ring-1 ring-amber-400' : 'border-[#e2e0d4]'
+                                    className={"w-full px-4 py-2.5 rounded-xl border bg-[#f4f3ea] text-xs font-semibold text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b] " + (
+                                        isBerasOver ? 'border-red-400 ring-1 ring-red-400' : isBerasUnder ? 'border-amber-400 ring-1 ring-amber-400' : 'border-[#e2e0d4]'
                                     )}
-                                    placeholder="Contoh: 14000"
+                                    placeholder="Contoh: 13500"
                                 />
                             </div>
+
                             <div>
-                                <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">Harga Gabah (Rp/Kg)</label>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
+                                    Harga Gabah (Rp/Kg) *
+                                </label>
                                 <input
                                     type="number"
                                     required
                                     value={tengkulakForm.hargaGabah}
                                     onChange={(e) => setTengkulakForm({ ...tengkulakForm, hargaGabah: e.target.value })}
-                                    className={"w-full px-4 py-2.5 rounded-xl border bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b] " + (
-                                        isGabahOver ? 'border-amber-400 ring-1 ring-amber-400' : 'border-[#e2e0d4]'
+                                    className={"w-full px-4 py-2.5 rounded-xl border bg-[#f4f3ea] text-xs font-semibold text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b] " + (
+                                        isGabahOver ? 'border-red-400 ring-1 ring-red-400' : isGabahUnder ? 'border-amber-400 ring-1 ring-amber-400' : 'border-[#e2e0d4]'
                                     )}
-                                    placeholder="Contoh: 7000"
+                                    placeholder="Contoh: 6500"
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">Periode</label>
-                                    <select
-                                        value={tengkulakForm.kuartal}
-                                        onChange={(e) => setTengkulakForm({ ...tengkulakForm, kuartal: e.target.value as Kuartal })}
-                                        className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
-                                    >
-                                        <option value="Q1">Periode 1 (Jan-Mar)</option>
-                                        <option value="Q2">Periode 2 (Apr-Jun)</option>
-                                        <option value="Q3">Periode 3 (Jul-Sep)</option>
-                                        <option value="Q4">Periode 4 (Okt-Des)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">Total Panen</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        value={tengkulakForm.totalPanen}
-                                        onChange={(e) => setTengkulakForm({ ...tengkulakForm, totalPanen: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
-                                        placeholder="Kg"
-                                    />
-                                </div>
+
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
+                                    Periode Panen
+                                </label>
+                                <select
+                                    value={tengkulakForm.kuartal}
+                                    onChange={(e) => setTengkulakForm({ ...tengkulakForm, kuartal: e.target.value as Kuartal })}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-semibold text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
+                                >
+                                    <option value="Q1">Periode 1 (Jan-Mar)</option>
+                                    <option value="Q2">Periode 2 (Apr-Jun)</option>
+                                    <option value="Q3">Periode 3 (Jul-Sep)</option>
+                                    <option value="Q4">Periode 4 (Okt-Des)</option>
+                                </select>
                             </div>
+
                             <div className="pt-3">
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
                                     className="btn-forest w-full py-3 text-xs font-bold uppercase tracking-wider justify-center disabled:opacity-50"
                                 >
-                                    <span>{isSubmitting ? 'Menyimpan...' : 'Simpan Transaksi'}</span>
+                                    <span>{isSubmitting ? 'Menyimpan...' : 'Simpan Harga'}</span>
                                 </button>
                             </div>
                         </form>
@@ -258,16 +318,19 @@ export function TengkulakDashboard({
                     <div className="bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm">
                         <div className="flex justify-between items-center mb-6">
                             <div>
-                                <h3 className="font-bold text-base text-[#121e14]">Tren Panen Per Periode</h3>
-                                <p className="text-xs text-[#121e14]/60">Distribusi hasil panen Anda per Kuartal.</p>
+                                <h3 className="font-bold text-base text-[#121e14]">Pergerakan Harga Disetor Per Periode</h3>
+                                <p className="text-xs text-[#121e14]/60">Grafik harga beras & gabah Anda per Kuartal.</p>
                             </div>
                         </div>
                         <div className="h-64 w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e0d4" />
                                     <XAxis dataKey="kuartal" tick={{ fontSize: 11, fill: '#121e14' }} />
-                                    <YAxis tick={{ fontSize: 11, fill: '#121e14' }} />
+                                    <YAxis
+                                        tick={{ fontSize: 11, fill: '#121e14' }}
+                                        tickFormatter={(val) => `Rp ${val / 1000}k`}
+                                    />
                                     <Tooltip
                                         contentStyle={{
                                             backgroundColor: '#15291b',
@@ -276,9 +339,12 @@ export function TengkulakDashboard({
                                             color: '#fff',
                                             fontSize: '12px',
                                         }}
+                                        formatter={(val: unknown) => [`Rp ${Number(val).toLocaleString('id-ID')}`, '']}
                                     />
-                                    <Bar dataKey="Total Panen (Kg)" fill="#15291b" radius={[6, 6, 0, 0]} />
-                                </BarChart>
+                                    <Legend />
+                                    <Line type="monotone" dataKey="Harga Beras" stroke="#15291b" strokeWidth={3} dot={{ r: 4 }} />
+                                    <Line type="monotone" dataKey="Harga Gabah" stroke="#ca8a04" strokeWidth={3} dot={{ r: 4 }} />
+                                </LineChart>
                             </ResponsiveContainer>
                         </div>
                     </div>
@@ -287,15 +353,15 @@ export function TengkulakDashboard({
                     <div className="bg-white rounded-[1.75rem] border border-[#e2e0d4] shadow-sm overflow-hidden">
                         <div className="p-6 border-b border-[#e2e0d4] flex justify-between items-center bg-[#f4f3ea]">
                             <div>
-                                <h3 className="font-bold text-base text-[#121e14]">Riwayat Setoran Panen Anda</h3>
-                                <p className="text-xs text-[#121e14]/60">Daftar transaksi panen yang tercatat atas nama Anda.</p>
+                                <h3 className="font-bold text-base text-[#121e14]">Riwayat Setoran Harga Anda</h3>
+                                <p className="text-xs text-[#121e14]/60">Daftar transaksi harga yang tercatat atas nama Anda.</p>
                             </div>
                             <div className="bg-[#15291b] text-[#d6f837] px-3.5 py-1 rounded-full text-xs font-bold">
-                                {myRecords.length} Transaksi
+                                {myRecords.length} Setoran
                             </div>
                         </div>
                         {myRecords.length === 0 ? (
-                            <div className="p-12 text-center text-[#121e14]/50 text-xs">Belum ada riwayat transaksi.</div>
+                            <div className="p-12 text-center text-[#121e14]/50 text-xs">Belum ada riwayat transaksi harga.</div>
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left whitespace-nowrap">
@@ -305,29 +371,48 @@ export function TengkulakDashboard({
                                             <th className="px-6 py-4 font-bold">Periode</th>
                                             <th className="px-6 py-4 font-bold">Harga Beras</th>
                                             <th className="px-6 py-4 font-bold">Harga Gabah</th>
-                                            <th className="px-6 py-4 font-bold">Total Panen</th>
+                                            <th className="px-6 py-4 font-bold">Status Bapanas</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-[#e2e0d4]">
-                                        {myRecords.map((r) => (
-                                            <tr key={r.id} className="hover:bg-[#f4f3ea]/60 transition-colors text-xs font-semibold">
-                                                <td className="px-6 py-4 text-[#121e14]/70">
-                                                    {new Date(r.timestamp).toLocaleDateString('id-ID', {
-                                                        day: '2-digit',
-                                                        month: 'short',
-                                                        year: 'numeric',
-                                                    })}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="bg-[#f4f3ea] text-[#121e14] px-2.5 py-1 rounded-md text-[11px] font-bold border border-[#e2e0d4]">
-                                                        {r.kuartal.replace('Q', 'Periode ')}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-[#15291b] font-bold">Rp {r.hargaBeras.toLocaleString('id-ID')}</td>
-                                                <td className="px-6 py-4 text-[#15291b] font-bold">Rp {r.hargaGabah.toLocaleString('id-ID')}</td>
-                                                <td className="px-6 py-4 text-emerald-800 font-extrabold">{r.totalPanen ? r.totalPanen.toLocaleString('id-ID') + ' Kg' : '-'}</td>
-                                            </tr>
-                                        ))}
+                                        {myRecords.map((r) => {
+                                            const isOver = r.hargaBeras > berasMax || r.hargaGabah > gabahMax;
+                                            const isUnder = r.hargaBeras < berasMin || r.hargaGabah < gabahMin;
+
+                                            return (
+                                                <tr key={r.id} className="hover:bg-[#f4f3ea]/60 transition-colors text-xs font-semibold">
+                                                    <td className="px-6 py-4 text-[#121e14]/70">
+                                                        {new Date(r.timestamp).toLocaleDateString('id-ID', {
+                                                            day: '2-digit',
+                                                            month: 'short',
+                                                            year: 'numeric',
+                                                        })}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="bg-[#f4f3ea] text-[#121e14] px-2.5 py-1 rounded-md text-[11px] font-bold border border-[#e2e0d4]">
+                                                            {r.kuartal.replace('Q', 'Periode ')}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-[#15291b] font-bold">Rp {r.hargaBeras.toLocaleString('id-ID')}</td>
+                                                    <td className="px-6 py-4 text-[#15291b] font-bold">Rp {r.hargaGabah.toLocaleString('id-ID')}</td>
+                                                    <td className="px-6 py-4">
+                                                        {isOver ? (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-red-100 text-red-800 px-2.5 py-0.5 rounded-full border border-red-200">
+                                                                Di Atas Acuan
+                                                            </span>
+                                                        ) : isUnder ? (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full border border-amber-200">
+                                                                Di Bawah Acuan
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                                                                Sesuai Acuan
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
@@ -335,6 +420,18 @@ export function TengkulakDashboard({
                     </div>
                 </div>
             </div>
+
+            {/* Edit Profile Modal */}
+            <EditProfileModal
+                isOpen={isEditProfileOpen}
+                onClose={() => setIsEditProfileOpen(false)}
+                user={{
+                    id: activeUser.id || '',
+                    name: currentUserName,
+                    role: activeUser.role,
+                }}
+                onProfileUpdated={handleProfileUpdated}
+            />
         </div>
     );
 }
