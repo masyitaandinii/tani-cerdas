@@ -5,6 +5,7 @@ import { Filter, Bot, ArrowUpRight, Lightbulb } from "lucide-react";
 import { DashboardCharts } from "./DashboardCharts";
 import { DusunDistributionCard } from "./DusunDistributionCard";
 import { useAppStore } from "../lib/store";
+import { DUSUN_NAMES } from "../lib/constants";
 
 export function DashboardClient() {
   const { setChatbotOpen } = useAppStore();
@@ -71,7 +72,7 @@ export function DashboardClient() {
             >
               {[1, 2, 3, 4].map((d) => (
                 <option key={d} value={d}>
-                  Dusun {d}
+                  Dusun {DUSUN_NAMES[d] || d}
                 </option>
               ))}
             </select>

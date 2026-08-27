@@ -9,6 +9,13 @@ export const DUSUN_LIMITS = {
     MAX: 4,
 };
 
+export const DUSUN_NAMES: Record<number, string> = {
+    1: 'Karangpilang',
+    2: 'Dopok Sambi',
+    3: 'Topang',
+    4: 'Gabang',
+};
+
 export const CHAT_LIMITS = {
     MAX_MESSAGE_LENGTH: 500,
 };

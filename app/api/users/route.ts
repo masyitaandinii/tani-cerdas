@@ -23,9 +23,9 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Unauthorized', details: null }, { status: 401 });
         }
 
-        // Only superadmin can create users
-        if (session.user.role !== ROLES.SUPERADMIN) {
-            return NextResponse.json({ error: 'Forbidden. Only Superadmin can manage users.', details: null }, { status: 403 });
+        // Both superadmin and admin can create users
+        if (session.user.role !== ROLES.SUPERADMIN && session.user.role !== ROLES.ADMIN) {
+            return NextResponse.json({ error: 'Forbidden. Only Superadmin or Admin can manage users.', details: null }, { status: 403 });
         }
 
         const body = await request.json();
@@ -33,6 +33,15 @@ export async function POST(request: Request) {
 
         if (!parsed.success) {
             return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 });
+        }
+
+        if (session.user.role === ROLES.ADMIN) {
+            if (parsed.data.assignedDusun !== session.user.assignedDusun) {
+                return NextResponse.json({ error: 'Admin only can create users for their assigned dusun', details: null }, { status: 403 });
+            }
+            if (parsed.data.role === 'superadmin' || parsed.data.role === 'admin') {
+                return NextResponse.json({ error: 'Admin cannot create superadmin or admin', details: null }, { status: 403 });
+            }
         }
 
         await connectToDatabase();
@@ -69,7 +78,7 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        if (session.user.role !== ROLES.SUPERADMIN) {
+        if (session.user.role !== ROLES.SUPERADMIN && session.user.role !== ROLES.ADMIN) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
@@ -79,7 +88,9 @@ export async function GET(request: Request) {
         const dusun = searchParams.get('dusun');
 
         const query: Record<string, unknown> = {};
-        if (dusun) {
+        if (session.user.role === ROLES.ADMIN) {
+            query.assignedDusun = session.user.assignedDusun;
+        } else if (dusun) {
             query.assignedDusun = parseInt(dusun, 10);
         }
 

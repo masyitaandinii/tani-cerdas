@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "../components/Navbar";
+import { DUSUN_NAMES } from "../lib/constants";
 import {
     BarChart,
     Bar,
@@ -507,7 +508,7 @@ export default function InputDashboardPage() {
                                     Halo, {activeUser.name}
                                 </h1>
                                 <p className="text-[#121e14]/70 text-xs font-semibold mt-0.5">
-                                    Dusun {activeUser.assignedDusun} • Tengkulak Partner
+                                    Dusun {DUSUN_NAMES[activeUser.assignedDusun || 1] || activeUser.assignedDusun} • Tengkulak Partner
                                 </p>
                             </div>
                         </div>
@@ -544,7 +545,7 @@ export default function InputDashboardPage() {
                                     Ringkasan Setoran & Kemitraan
                                 </h3>
                                 <p className="text-xs text-[#121e14]/70 leading-relaxed">
-                                    Anda tercatat memiliki <strong>{myRecords.length} transaksi setoran</strong> di Dusun {activeUser.assignedDusun}. Jika ada ketidaksesuaian data, hubungi Admin Dusun setempat.
+                                    Anda tercatat memiliki <strong>{myRecords.length} transaksi setoran</strong> di Dusun {DUSUN_NAMES[activeUser.assignedDusun || 1] || activeUser.assignedDusun}. Jika ada ketidaksesuaian data, hubungi Admin Dusun setempat.
                                 </p>
                             </div>
                             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#e2e0d4]">
@@ -554,7 +555,7 @@ export default function InputDashboardPage() {
                                 </div>
                                 <div>
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#121e14]/50">Dusun Mitra</span>
-                                    <p className="text-base font-extrabold text-[#15291b]">Dusun {activeUser.assignedDusun}</p>
+                                    <p className="text-base font-extrabold text-[#15291b]">Dusun {DUSUN_NAMES[activeUser.assignedDusun || 1] || activeUser.assignedDusun}</p>
                                 </div>
                             </div>
                         </div>
@@ -934,7 +935,7 @@ export default function InputDashboardPage() {
                         <p className="text-[#121e14]/70 text-xs font-semibold mt-0.5">
                             {activeUser.role === "superadmin"
                                 ? "Akses Pengelolaan Seluruh Dusun & Akses Pengguna"
-                                : `Anda mengelola data untuk Dusun ${activeUser.assignedDusun}.`}
+                                : `Anda mengelola data untuk Dusun ${DUSUN_NAMES[activeUser.assignedDusun || 1] || activeUser.assignedDusun}.`}
                         </p>
                     </div>
                     <button
@@ -1328,7 +1329,7 @@ export default function InputDashboardPage() {
                                                                 {r.nama}
                                                             </div>
                                                             <div className="text-[11px] text-[#121e14]/60 mt-0.5 flex items-center gap-2">
-                                                                <span>Dusun {r.dusun}</span>
+                                                                <span>Dusun {DUSUN_NAMES[r.dusun] || r.dusun}</span>
                                                                 <span>•</span>
                                                                 <span>
                                                                     {new Date(r.timestamp).toLocaleDateString("id-ID")}

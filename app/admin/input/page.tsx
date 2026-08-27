@@ -14,6 +14,7 @@ import {
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "../../components/Navbar";
+import { DUSUN_NAMES } from "../../lib/constants";
 import {
     BarChart,
     Bar,
@@ -144,6 +145,9 @@ export default function InputDataPage() {
     const [usersList, setUsersList] = useState<AppUser[]>([]);
     const [loadingUsers, setLoadingUsers] = useState(false);
     const [deletingUser, setDeletingUser] = useState<AppUser | null>(null);
+    const [editingUser, setEditingUser] = useState<AppUser | null>(null);
+    const [editUserFormData, setEditUserFormData] = useState({ name: "", password: "" });
+    const [isUpdatingUser, setIsUpdatingUser] = useState(false);
 
     // Redirect to login page if unauthenticated
     useEffect(() => {
@@ -349,7 +353,7 @@ export default function InputDataPage() {
     // Submit User Creation
     const handleUserSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!activeUser || activeUser.role !== "superadmin") return;
+        if (!activeUser || (activeUser.role !== "superadmin" && activeUser.role !== "admin")) return;
 
         setIsSubmittingUser(true);
         try {
@@ -388,6 +392,40 @@ export default function InputDataPage() {
             alert("Terjadi kesalahan koneksi saat menyimpan pengguna.");
         } finally {
             setIsSubmittingUser(false);
+        }
+    };
+
+    // Submit Edit User
+    const handleEditUserSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingUser) return;
+
+        setIsUpdatingUser(true);
+        try {
+            const res = await fetch(`/api/users/${editingUser.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(editUserFormData),
+            });
+
+            if (res.ok) {
+                setEditingUser(null);
+                setEditUserFormData({ name: "", password: "" });
+                await fetchUsers();
+                setSuccessModal({
+                    open: true,
+                    title: "Akun Berhasil Diperbarui!",
+                    message: `Data akun telah diperbarui.`,
+                });
+            } else {
+                const err = await res.json();
+                alert(`Gagal memperbarui akun: ${err.error || "Unknown error"}`);
+            }
+        } catch (err) {
+            console.error("Failed to update user:", err);
+            alert("Terjadi kesalahan saat memperbarui akun.");
+        } finally {
+            setIsUpdatingUser(false);
         }
     };
 
@@ -464,7 +502,7 @@ export default function InputDataPage() {
                                     Halo, {activeUser.name}
                                 </h1>
                                 <p className="text-[#121e14]/70 text-xs font-semibold mt-0.5">
-                                    Dusun {activeUser.assignedDusun} • Tengkulak Partner
+                                    Dusun {DUSUN_NAMES[activeUser.assignedDusun || 1]} • Tengkulak Partner
                                 </p>
                             </div>
                         </div>
@@ -501,7 +539,7 @@ export default function InputDataPage() {
                                     Ringkasan Setoran & Kemitraan
                                 </h3>
                                 <p className="text-xs text-[#121e14]/70 leading-relaxed">
-                                    Anda tercatat memiliki <strong>{myRecords.length} transaksi setoran</strong> di Dusun {activeUser.assignedDusun}. Jika ada ketidaksesuaian data, hubungi Admin Dusun setempat.
+                                    Anda tercatat memiliki <strong>{myRecords.length} transaksi setoran</strong> di Dusun {DUSUN_NAMES[activeUser.assignedDusun || 1]}. Jika ada ketidaksesuaian data, hubungi Admin Dusun setempat.
                                 </p>
                             </div>
                             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#e2e0d4]">
@@ -511,7 +549,7 @@ export default function InputDataPage() {
                                 </div>
                                 <div>
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#121e14]/50">Dusun Mitra</span>
-                                    <p className="text-base font-extrabold text-[#15291b]">Dusun {activeUser.assignedDusun}</p>
+                                    <p className="text-base font-extrabold text-[#15291b]">Dusun {DUSUN_NAMES[activeUser.assignedDusun || 1]}</p>
                                 </div>
                             </div>
                         </div>
@@ -709,10 +747,10 @@ export default function InputDataPage() {
                                             }
                                             className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                         >
-                                            <option value={1}>Dusun 1</option>
-                                            <option value={2}>Dusun 2</option>
-                                            <option value={3}>Dusun 3</option>
-                                            <option value={4}>Dusun 4</option>
+                                            <option value={1}>Dusun {DUSUN_NAMES[1]}</option>
+                                            <option value={2}>Dusun {DUSUN_NAMES[2]}</option>
+                                            <option value={3}>Dusun {DUSUN_NAMES[3]}</option>
+                                            <option value={4}>Dusun {DUSUN_NAMES[4]}</option>
                                         </select>
                                     </div>
                                 )}
@@ -877,6 +915,68 @@ export default function InputDataPage() {
                     </div>
                 )}
 
+                {/* Edit User Modal */}
+                {editingUser && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in p-4">
+                        <div role="dialog" aria-modal="true" aria-labelledby="edit-user-title" className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-[#e2e0d4] relative">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
+                                    <Pencil className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 id="edit-user-title" className="font-bold text-[#121e14] text-lg">Edit Pengguna</h3>
+                                    <p className="text-xs text-[#121e14]/60">@{editingUser.username}</p>
+                                </div>
+                            </div>
+                            
+                            <form onSubmit={handleEditUserSubmit} className="space-y-4">
+                                <div>
+                                    <label htmlFor="edit-name" className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
+                                        Nama Lengkap
+                                    </label>
+                                    <input
+                                        id="edit-name"
+                                        type="text"
+                                        required
+                                        value={editUserFormData.name}
+                                        onChange={(e) => setEditUserFormData({ ...editUserFormData, name: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="edit-password" className="block text-xs font-bold uppercase tracking-wider text-[#121e14] mb-1.5">
+                                        Password Baru (Opsional)
+                                    </label>
+                                    <input
+                                        id="edit-password"
+                                        type="password"
+                                        value={editUserFormData.password}
+                                        onChange={(e) => setEditUserFormData({ ...editUserFormData, password: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
+                                        placeholder="Kosongkan jika tidak ingin mengubah password"
+                                    />
+                                </div>
+                                <div className="pt-2 flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingUser(null)}
+                                        className="flex-1 py-3 bg-[#f4f3ea] text-xs font-bold uppercase rounded-xl border border-[#e2e0d4] text-[#121e14]"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isUpdatingUser}
+                                        className="btn-forest flex-1 py-3 text-xs font-bold uppercase tracking-wider justify-center disabled:opacity-50"
+                                    >
+                                        <span>{isUpdatingUser ? "Menyimpan..." : "Simpan Perubahan"}</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
                 {/* Top Admin Header Bar */}
                 <div className="flex justify-between items-center bg-white p-6 rounded-[1.75rem] border border-[#e2e0d4] shadow-sm">
                     <div>
@@ -891,7 +991,7 @@ export default function InputDataPage() {
                         <p className="text-[#121e14]/70 text-xs font-semibold mt-0.5">
                             {activeUser.role === "superadmin"
                                 ? "Akses Pengelolaan Seluruh Dusun & Akses Pengguna"
-                                : `Anda mengelola data untuk Dusun ${activeUser.assignedDusun}.`}
+                                : `Anda mengelola data untuk Dusun ${DUSUN_NAMES[activeUser.assignedDusun || 1] || activeUser.assignedDusun}.`}
                         </p>
                     </div>
                     <button
@@ -906,7 +1006,7 @@ export default function InputDataPage() {
                     {/* Form Sidebar Section */}
                     <div className="xl:col-span-1">
                         <div className="bg-white rounded-[1.75rem] border border-[#e2e0d4] shadow-sm overflow-hidden sticky top-24">
-                            {activeUser.role === "superadmin" && (
+                            {(activeUser.role === "superadmin" || activeUser.role === "admin") && (
                                 <div className="flex border-b border-[#e2e0d4]">
                                     <button
                                         onClick={() => setActiveTab("data")}
@@ -936,7 +1036,7 @@ export default function InputDataPage() {
                                 </div>
                             )}
 
-                            {(activeTab === "data" || activeUser.role !== "superadmin") && (
+                            {(activeTab === "data") && (
                                 <>
                                     <div className="bg-[#15291b] p-5 border-b border-white/10 text-white">
                                         <h3 className="font-bold flex items-center text-[#d6f837] text-base">
@@ -998,10 +1098,10 @@ export default function InputDataPage() {
                                                     }
                                                     className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                                 >
-                                                    <option value={1}>Dusun 1</option>
-                                                    <option value={2}>Dusun 2</option>
-                                                    <option value={3}>Dusun 3</option>
-                                                    <option value={4}>Dusun 4</option>
+                                                    <option value={1}>Dusun {DUSUN_NAMES[1]}</option>
+                                                    <option value={2}>Dusun {DUSUN_NAMES[2]}</option>
+                                                    <option value={3}>Dusun {DUSUN_NAMES[3]}</option>
+                                                    <option value={4}>Dusun {DUSUN_NAMES[4]}</option>
                                                 </select>
                                             </div>
                                         )}
@@ -1090,7 +1190,7 @@ export default function InputDataPage() {
                                 </>
                             )}
 
-                            {activeUser.role === "superadmin" && activeTab === "user" && (
+                            {activeTab === "user" && (
                                 <>
                                     <div className="bg-[#121e14] p-5 border-b border-white/10 text-white">
                                         <h3 className="font-bold flex items-center text-white text-base">
@@ -1168,7 +1268,7 @@ export default function InputDataPage() {
                                                     }
                                                     className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                                 >
-                                                    <option value="admin">Admin Dusun</option>
+                                                    {activeUser.role === "superadmin" && <option value="admin">Admin Dusun</option>}
                                                     <option value="tengkulak">Tengkulak</option>
                                                 </select>
                                             </div>
@@ -1186,10 +1286,16 @@ export default function InputDataPage() {
                                                     }
                                                     className="w-full px-4 py-2.5 rounded-xl border border-[#e2e0d4] bg-[#f4f3ea] text-xs font-medium text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                                 >
-                                                    <option value={1}>Dusun 1</option>
-                                                    <option value={2}>Dusun 2</option>
-                                                    <option value={3}>Dusun 3</option>
-                                                    <option value={4}>Dusun 4</option>
+                                                    {activeUser.role === "superadmin" ? (
+                                                        <>
+                                                            <option value={1}>Dusun {DUSUN_NAMES[1]}</option>
+                                                            <option value={2}>Dusun {DUSUN_NAMES[2]}</option>
+                                                            <option value={3}>Dusun {DUSUN_NAMES[3]}</option>
+                                                            <option value={4}>Dusun {DUSUN_NAMES[4]}</option>
+                                                        </>
+                                                    ) : (
+                                                        <option value={activeUser.assignedDusun}>Dusun {DUSUN_NAMES[activeUser.assignedDusun || 1]}</option>
+                                                    )}
                                                 </select>
                                             </div>
                                         </div>
@@ -1211,14 +1317,14 @@ export default function InputDataPage() {
                     {/* Right Main Table Content Section */}
                     <div className="xl:col-span-2 space-y-8">
                         {/* View for Data Panen Tab */}
-                        {(activeTab === "data" || activeUser.role !== "superadmin") && (
+                        {(activeTab === "data") && (
                             <div className="bg-white rounded-[1.75rem] border border-[#e2e0d4] shadow-sm overflow-hidden">
                                 <div className="p-6 border-b border-[#e2e0d4] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#f4f3ea]">
                                     <div>
                                         <h3 className="font-bold text-base text-[#121e14]">
                                             {activeUser.role === "superadmin"
                                                 ? "Data Panen Seluruh Dusun (Terbaru)"
-                                                : `Data Tengkulak Dusun ${activeUser.assignedDusun} (Terbaru)`}
+                                                : `Data Tengkulak Dusun ${DUSUN_NAMES[activeUser.assignedDusun || 1] || activeUser.assignedDusun} (Terbaru)`}
                                         </h3>
                                         <p className="text-xs text-[#121e14]/60">
                                             Daftar riwayat yang terdaftar dalam sistem (diurutkan paling baru di atas).
@@ -1242,10 +1348,10 @@ export default function InputDataPage() {
                                                     className="px-3 py-1.5 rounded-xl border border-[#e2e0d4] bg-white text-xs font-bold text-[#121e14] focus:outline-none focus:ring-2 focus:ring-[#15291b]"
                                                 >
                                                     <option value="ALL">Semua Dusun</option>
-                                                    <option value={1}>Dusun 1</option>
-                                                    <option value={2}>Dusun 2</option>
-                                                    <option value={3}>Dusun 3</option>
-                                                    <option value={4}>Dusun 4</option>
+                                                    <option value={1}>Dusun {DUSUN_NAMES[1]}</option>
+                                                    <option value={2}>Dusun {DUSUN_NAMES[2]}</option>
+                                                    <option value={3}>Dusun {DUSUN_NAMES[3]}</option>
+                                                    <option value={4}>Dusun {DUSUN_NAMES[4]}</option>
                                                 </select>
                                             </div>
                                         )}
@@ -1285,7 +1391,7 @@ export default function InputDataPage() {
                                                                 {r.nama}
                                                             </div>
                                                             <div className="text-[11px] text-[#121e14]/60 mt-0.5 flex items-center gap-2">
-                                                                <span>Dusun {r.dusun}</span>
+                                                                <span>Dusun {DUSUN_NAMES[r.dusun] || r.dusun}</span>
                                                                 <span>•</span>
                                                                 <span>
                                                                     {new Date(r.timestamp).toLocaleDateString("id-ID")}
@@ -1338,7 +1444,7 @@ export default function InputDataPage() {
                         )}
 
                         {/* View for Superadmin User Management Tab */}
-                        {activeUser.role === "superadmin" && activeTab === "user" && (
+                        {activeTab === "user" && (
                             <div className="bg-white rounded-[1.75rem] border border-[#e2e0d4] shadow-sm overflow-hidden">
                                 <div className="p-6 border-b border-[#e2e0d4] flex justify-between items-center bg-[#f4f3ea]">
                                     <div>
@@ -1401,17 +1507,30 @@ export default function InputDataPage() {
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4 text-[#121e14]">
-                                                            {u.assignedDusun ? `Dusun ${u.assignedDusun}` : "-"}
+                                                            {u.assignedDusun ? `Dusun ${DUSUN_NAMES[u.assignedDusun] || u.assignedDusun}` : "-"}
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
                                                             {u.role !== "superadmin" ? (
-                                                                <button
-                                                                    onClick={() => setDeletingUser(u)}
-                                                                    className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all text-xs font-bold inline-flex items-center gap-1.5"
-                                                                >
-                                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                                    <span>Hapus</span>
-                                                                </button>
+                                                                <div className="flex items-center justify-center gap-2">
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setEditingUser(u);
+                                                                            setEditUserFormData({ name: u.name, password: "" });
+                                                                        }}
+                                                                        className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all text-xs font-bold inline-flex items-center gap-1.5"
+                                                                        title="Edit Akun"
+                                                                    >
+                                                                        <Pencil className="w-3.5 h-3.5" />
+                                                                        <span>Edit</span>
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => setDeletingUser(u)}
+                                                                        className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all text-xs font-bold inline-flex items-center gap-1.5"
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                        <span>Hapus</span>
+                                                                    </button>
+                                                                </div>
                                                             ) : (
                                                                 <span className="text-[10px] text-gray-400 font-bold">
                                                                     Utama

@@ -223,7 +223,7 @@ export function StatsCards() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={trendData}
-                margin={{ top: 20, right: 10, left: 0, bottom: 5 }}
+                margin={{ top: 20, right: 25, left: 25, bottom: 5 }}
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
@@ -242,6 +242,8 @@ export function StatsCards() {
                     fontWeight: 600,
                   }}
                   dy={10}
+                  padding={{ left: 20, right: 20 }}
+                  interval="preserveStartEnd"
                 />
                 <YAxis
                   hide={true}
